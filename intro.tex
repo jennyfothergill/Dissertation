@@ -1,0 +1,133 @@
+\chapter{Introduction}
+
+%% I don't know where this should go so it's here for now, also excerpt from comment as reminder
+%% Big-picture looking at molecular simulations to look at morphology. Learned about how simulations work. Validate results against prior work (not explicitly stated above) and experiments. Focus on electronically active molecules. First principles to analyzing periodic structure (what's in between? It's a kind of wacky spectrum!) 
+Molecular simulation gives us the unique ability to peer into the equilibrium structure of atoms and molecules.
+Using density functional theory, we can obtain the optimized ground state structure or we can look at the induced shifts in the electron density in the form of charges.
+Using molecular dynamics, we can sample the equilibrium structures of the thermodynamic ensemble. 
+We can then use structural analysis techniques like GIXS (probe the periodic structure), UV-Vis absorption (probe the Daydov splitting induced in the absorption spectra). 
+Or if the structure is already known the relative energies and charges can help us determine which structure is favorable and which interactions stabilize that structure.
+%% validate techniques with experiment -> validate techniques against themselves
+
+
+The circular scientific process, consisting of observation, hypothesis, experiment, analysis, and conclusion, often neglects to emphasize a vital extra step which is review and reproduction of the results. 
+A Nature study from 2016 found that more than 70\% of researchers had tried and failed to reproduce another scientist’s experiments---over half had failed to reproduce their own past work \cite{Baker2016}.
+The experience of trying to replicate a seemingly simple method and failing, is common and discouraging.
+Pushing the boundaries of knowledge with new discoveries is important, but it is equally important to validate that these new discoveries are robust and verifiable.
+
+Computer simulation, in which all parameters can be controlled, should be the most straightforward to reproduce and get identical results. 
+This is in contrast to a wet-laboratory setting where many unforeseen factors can influence the result.
+For example, in the case of measuring fullerene solubility in water, exposure of the experiment to sunlight or ozone in the atmosphere may affect the result \cite{Isaacson2009}.
+In a computer simulation, however, no particle or force exists unless it is specified by the user, so theoretically the experiment should be exactly reproducible.
+A computational scientist should be able to read a paper in their field, repeat the experiment with the information they gained, and achieve statistically identical results.
+Unfortunately, although this goal is simple in theory, many barriers stand between computational scientists and reproducibility.
+These struggles can be broken into two categories: those using established code bases and those using bespoke scripts.
+When reporting experiments conducted using established code bases, which are stable and distributed open or closed source, the following reproducibility issues can occur:
+\begin{itemize}
+    \item Lack of documentation of the version of the software or its dependencies. (e.g. BLAS libraries, compiler, etc.)
+    \item Potential errors when moving data between software (e.g. improperly handling file type or unit conversions)
+    \item Manual editing of files leading to typographical errors
+    \item User unfamiliarity with which simulation parameters should be reported
+    \item In the case of closed-source software, the simulation details may be obscured; users cannot view the source code and must rely on the documentation being accurate
+\end{itemize}
+When reporting experiments conducted using custom code, in addition to the above hurdles, the following barriers stand in the way of reproducibility:
+\begin{itemize}
+    \item Researchers may not provide the source code, whether due to fears of being scooped or unfamiliarity with software distribution
+    \item If the code is available, it may be non-functioning due to lack of unit-tests and continuous integration
+    \item As user developed code is often under revision, inadequate version reporting or complete absence of version control
+    \item Poor documentation and examples may make the code base unusable to all but its developers
+    \item In the case of a workflow consisting of multiple separate scripts, poor documentation of the process of moving data between scripts or reliance on users manually editing the data may make the logic hard to follow.
+\end{itemize}
+So what can be done?
+%% training -> community -> tools
+Many scientists are subject matter experts first and learn code development on an as-needed basis, or never have any formal training in software development best practices. 
+By investing in initial training, ultimately researchers can save time by working more efficiently.
+For example, a new scientist may need to learn bash, git, a programming language, and a specifics of a library or engine that they commonly work with.
+Many engines may provide their own tutorials \cite{hoomd_tutorials, Lemkul2019, Lemkul2020}.
+Collating some relevant tutorials within a lab (and perhaps creating some additional training materials) can help to standardize the training process and make sure that new researchers are not missing material \cite{notebooktutorials}.
+There are many short workshops and references to help newcomers get started, such as Software Carpentry \cite{Wilson2014}.
+Software Carpentry is an open-source, community-driven organization which hosts a collection of lessons and conducts in-person and remote workshops to teach basic lab skills for research computing \cite{swc-main}.
+Using tools like git can help computational scientists keep track how each result was produced, like a lab notebook \cite{Sandve2013}.
+%% there was a quote from the how to increase reproducibility and it was with better training--maybe include data on how SWC makes training better
+%%To improve the useability and extensibility of molecular simulation tools, I have been intentional about incorporating Software Carpentry principles into my work
+%%My experience as a Software Carpentry instructor has given me the pedagogical foundation to think about how users take in new information..
+%%With these principles in mind, I have created tutorial examples to help current and future students understand scientific concepts and how to use computational tools \cite{notebooktutorials}.
+%% what is version control
+Automation, or using scripts to avoid any manual data manipulation will help reduce error and boost efficiency and these scripts should be hosted in open version-controlled repositories \cite{Sandve2013}.
+For example, if a public version controlled repository is set up from the beginning, when it comes time to publish, no additional work is required to present the code.
+
+By providing adequate training upfront, new scientists can feel more prepared to be part of the open source science community.
+One reason that scientists may not share their code because they view it as unfinished or messy and don't have time to prepare it for publication or worry about being judged \cite{Irving2016}.
+Some scientists may worry that by sharing their work openly, their discoveries will be scooped, but using version control can not only help scientist to track their work but as it provides a signed and timestamped commit---it can be used to prove priority \cite{Blischak2016}. 
+%% this could be a lead in to collaboration and community
+But collaboration and participation in a community is vital to helping make sure that computational science is reproducible. 
+%% I feel like I'm not gettin across the point I mean to... 
+Community, not prestige, matters to open-source developers \cite{Smirnova2022}.
+And there are many simple ways to help newcomers feel welcome from having public contributing guides and codes of conduct to promptly responding to and acknowledging their contributions \cite{Sholler2019}.
+
+Jupyter notebooks, which cells of formatted text and images with runnable code, can be a great way for scientists to show and tell the story of their work \cite{Rule2019a}.
+Tools like github issues/project boards can be used to manage and organize collaboration and development \cite{Gentzkow2014}.
+Providing the exact names and versions of software is good, even better if additionally containers (e.g., Docker or Singularity) or virtual machines (VMs) which contain the exact software stack and save users the hassle of trying to install \cite{Cito2016, Shirts2008a}.
+
+Additionally, reproducibility can be aided by not only sharing the source code but also the unedited raw data and analysis methods \cite{Miyakawa2020}. 
+By having the complete process---from data collection, to analysis, and even figure creation---be completely automated, transparent, and open, computational results can be the most reproducible and useful to other researchers and society as a whole \cite{Taylor2019, Donoho2009}.
+%% transition to TRUE
+
+The principles which make computational research transparent, reproducible, useable by others, and extensible(TRUE) \cite{Thompson2020}.
+Our perspective paper emphasized the importance of training and community \cite{Jankowski2019}.
+
+An area where transparency, reproducibility, useability, and extensibility is really brought to the forefront is in my experience developing scientific software with the Molecular Simulation and Design Framework (MoSDeF) team.
+I have contributed to the development of open-source packages including mBuild, Foyer, Signac, Fresnel, and HOOMD \cite{mbuild, foyer, signac, fresnel, hoomd}.
+These contributions have given me ample opportunity to exercise best software development practices like writing good documentation, using version control, writing unit tests, employing CI, using a fork \& pull workflow, etc.
+This experience will help me to be more efficient in my future work.
+I've also gained valuable experience working as part of a team.
+As I plan to integrate my future work with existing projects, good collaborative skills will be necessary.
+I have also found this experience to be very empowering: submitting changes to reputable code bases has helped me to place myself in the computational science community.
+Helping others to realize this feeling for themselves is part of the reason I so strongly believe in the principles of TRUE science.
+
+% transition to what I have done
+Throughout my journey as a graduate student, I have grown as a computational scientist. % hokey?
+My research focus shifted part way through, but I would say all of my struggle and efforts have taught me valuable lessons about how to present my work in a way that is most helpful to the next generation of computational scientists.
+Broadly, my research has used molecular simulation to determine the morphology of the bulk structure from thermodynamic self-assembly of its constituent parts. 
+Learning the intricacies and struggles and what matters to each simulation and how to disseminate and visualize these results.
+I then have used various analysis methods to validate these simulated morphologies with those observed in experiment. 
+Along the way, I have found my passion in helping to make computational sciences more accessible and reproducible.
+My work has focused on developing and using computational tools and workflows to predict and understand self assembly of electronically active molecules.
+The resulting four manuscripts, one poster, and one conference presentation span all scales from first-principles calculation of electronically active dimers to new tools for analyzing the long-range periodicities of large scale atomistic and CG simulations.
+%EJnote: There's a lot in the above paragraph and I'm going to take some stream-of-thought notes to help me make sense of it to inform how we organize it: Sounds like there was a major "pivot" in research partway through - what was this pivot? Big-picture looking at molecular simulations to look at morphology. Learned about how simulations work. Validate results against prior work (not explicitly stated above) and experiments. Focus on electronically active molecules. First principles to analyzing periodic structure (what's in between? It's a kind of wacky spectrum!) 
+
+%EJnote: OK, I think one thing that's missing right now is a bit of an explanation or argument about how this thesis is groundbreaking in some aspects: There are tons of theses where people have (a) Used some code to do simulations for their PhD, or (b) Wrote some code to do simulations for their PhD, but it is quite new and different (or at least it's not easy to find other examples of!) having an explicit focus on making sure the software doesn't die after you leave. 
+
+%% here I go trying to get at the point you are saying :)
+In this thesis I will write about times when I have used code to run an experiment, and when I have written code to run an experiment.
+An additional focus of this thesis is the work that I have done to make this code TRUE in the hopes that it will serve others after I leave.
+
+In my first publication on dimer formation, an investigation of the excitonic splitting observed in cyanine dye dimers was done using density functional theory (DFT) \cite{Fothergill2018}.
+By comparing calculated with experimental absorption spectra it was found that the solvent may play a large role in the dimer formation and peak shifting.
+At this time I wrote some python code which used singular value decomposition to fit the mostly-planar dye molecules to a vector and a plane. 
+I showed a graphic for how this was done in the SI, but did not include any code or any details of what software versions I used. 
+The method is not theoretically complex and if I recall correctly I used a function from the Scipy library, but this work would have been more reproducible had the exact code and its dependencies been provided in the SI.
+At the time, however I was not aware of version control using git or GitHub and instead used Dropbox's history.
+I did my best to report all details for the computations I performed although they were done in a proprietary package (Gaussian09), so the source code is not available.
+Along with the SI, PDB files for all DFT optimized structures were included, but I did not provide any of the raw input or output files used by Gaussian, nor did I report how I converted these structures to PDB.
+Another bespoke code used in the publication, referred to as the KRM code, was developed in Java by Dr Yurke and its theory is given in \citet[Supporting Information]{Cannon2017}, but to my knowledge the source code is not publicly available or under version control, so I could not report its version or give instructions for how this work could be reproduced.
+This critique of my past work is by no means a condemnation of it; my effort and the guidance I received from my collaborators were an invaluable learning experience.
+Learning to use git and GitHub is an initial barrier which adds to cognitive load---a novice computational scientist needs to learn the theory and background of their method, how to navigate the shell, how to use a new software, and perhaps a scripting language, so although using version control is a vital part of writing reproducible scientific code, initially learning how to use it may seem like an unwanted additional hurdle.
+I was also somewhat ignorant of what details I should report---at the time I don't think I knew how to determine what version of python or java or which additional libraries I was using.
+I performed all simulations under the guidance of Drs. Li and Yurke, created all figures, and wrote all stages of draft this paper with review feedback from Dr Li, Dr Knowlton, and Dr. Yurke.
+
+In my second publication, an investigation of the supramolecular interactions which guide crystal self-assembly in diphenylurea transition metal complexes was done using DFT \cite{Millard2019a}.
+I contributed DFT energies and optimized structures under the guidance of Dr King.
+
+My contribution to the lab's perspective paper was mostly about my on-boarding experience trying to reproduce an existing model; a task which should be very straightforward but, which any computational scientist can attest, is far from simple \cite{Jankowski2019}.
+
+In my first poster contribution to the SciPy conference, I presented a tool called GIXStapose, an interactive structure viewer alongside its simulated diffraction pattern \cite{gixstapose, scipy2020}.
+%% more here
+
+My third publication was a thorough investigation of the effect of para-substituents to the crystal structure of diphenylurea molecules. I contributed DFT calculations, data analysis, writing in the initial draft, and images made in Figures 3, 4, 5, 6, and 8 \cite{Fothergill2021}.
+
+In a talk I gave at AIChE I presented how MoSDeF tools can be used to update an older workflow, making it more TRUE.
+
+Finally, I will summarize my currently unpublished effort in a multi-university collaborative study to use MoSDeF tools reproducibility
+
+In sum, working at all scales has crystallized the need for pipelines emphasizing transferability, reproducibility, useability, and extensibility.

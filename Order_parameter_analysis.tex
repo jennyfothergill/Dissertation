@@ -1,0 +1,522 @@
+
+    \hypertarget{p3ht-validation}{%
+\section{P3HT Validation}\label{p3ht-validation}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{1}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k+kn}{import} \PY{n+nn}{os}
+
+\PY{k+kn}{from} \PY{n+nn}{cmeutils}\PY{n+nn}{.}\PY{n+nn}{structure} \PY{k+kn}{import} \PY{n}{order\PYZus{}parameter}
+\PY{k+kn}{from} \PY{n+nn}{fresnel} \PY{k+kn}{import} \PY{n}{camera}\PY{p}{,} \PY{n}{pathtrace}\PY{p}{,} \PY{n}{light}
+\PY{k+kn}{from} \PY{n+nn}{gixstapose}\PY{n+nn}{.}\PY{n+nn}{diffractometer} \PY{k+kn}{import} \PY{n}{Diffractometer}\PY{p}{,} \PY{n}{get\PYZus{}angle}
+\PY{k+kn}{from} \PY{n+nn}{gixstapose}\PY{n+nn}{.}\PY{n+nn}{draw\PYZus{}scene} \PY{k+kn}{import} \PY{n}{get\PYZus{}scene}
+\PY{k+kn}{import} \PY{n+nn}{gsd}\PY{n+nn}{.}\PY{n+nn}{hoomd}
+\PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
+\PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+\PY{k+kn}{from} \PY{n+nn}{PIL} \PY{k+kn}{import} \PY{n}{Image}
+\PY{k+kn}{from} \PY{n+nn}{planckton}\PY{n+nn}{.}\PY{n+nn}{utils}\PY{n+nn}{.}\PY{n+nn}{units} \PY{k+kn}{import} \PY{n}{string\PYZus{}to\PYZus{}quantity}\PY{p}{,} \PY{n}{kelvin\PYZus{}from\PYZus{}reduced}
+\PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{interpolate} \PY{k+kn}{import} \PY{n}{RectBivariateSpline}
+\PY{k+kn}{import} \PY{n+nn}{signac}
+\PY{k+kn}{import} \PY{n+nn}{unyt} \PY{k}{as} \PY{n+nn}{u}
+\end{Verbatim}
+\end{tcolorbox}
+
+    In the following notebook, we will demonstrate the recreation of part a
+of the following figure from
+\href{http://www.mdpi.com/2073-4360/10/12/1305}{Miller 2018}. This
+figure shows the order parameter of a OPLS-UA P3HT system at different
+temperatures and solvent parameters (\(\epsilon_{s}\) or e\_factor).
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Miller2018_fig3.png}
+    \end{center}
+
+The order parameter is used to quantify the degree of ordering in the
+system by grouping structures into clusters, and then calculating the
+ratio of the structures in a ``large'' clusters over the total number of
+structures in the system. In the case of a P3HT polymer, the structure
+we use for the order parameter analysis is the thiophene moeity. The
+clustering criteria depends on the angle between the planes of the
+thiophenes and the distance between the thiophene centers. A thiophene
+pair must meet both clustering criteria to be considered cluster
+neighbors. For example, if the angle cutoff is 10° and the distance
+cutoff is 6\AA, the image below shows a thiophene pair which does not meet
+the criteria (encircled and crossed in red) and another which does
+(encircled in green).
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/p3ht-alignment.png}
+    \end{center}
+
+For a cluster to be considered ``large'', it must contain at least 6
+thiophenes.
+
+All of this analysis, from the simulations to the functions used to run
+the analysis itself has been redone using new tools. The goal is to show
+that not only can we recreate our previous work, but also the tools
+we've developed make this analysis more transparent, reproducible,
+usable, and extensible.
+
+The dataset used in this notebook was generated using
+\href{https://github.com/cmelab/planckton-flow}{PlanckTon}, which
+provides a way to easily and reproducibly interface with the
+\href{https://hoomd-blue.readthedocs.io/en/latest/index.html}{HOOMD-blue}
+molecular dynamics engine, and
+\href{https://github.com/cmelab/planckton-flow}{PlanckTon-flow}, which
+uses \href{https://docs.signac.io/en/latest/}{Signac} to initialize and
+submit simulations across the desired parameter space. The workspace
+with all data used in this notebook can be found
+\href{https://zenodo.org/record/5911940}{here}.
+
+First, assuming the tarball from the above link is unpacked in this
+directory, we can use signac to explore this workspace:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{2}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{p} \PY{o}{=} \PY{n}{signac}\PY{o}{.}\PY{n}{get\PYZus{}project}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{p3ht\PYZhy{}ua}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+
+\PY{n}{p}\PY{o}{.}\PY{n}{detect\PYZus{}schema}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{2}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+ProjectSchema(<len=15>)
+\{
+ 'density': 'str([0.56_g-cm**3], 1)',
+ 'dt': 'float([0.001], 1)',
+ 'e_factor': 'float([0.2, 0.4, 0.6, 0.8, 1.0], 5)',
+ 'forcefield': 'str([gaff-custom], 1)',
+ 'input': 'tuple([('P3HT-16-gaff',)], 1)',
+ 'kT': 'tuple([(1,), (1.5,), (2,), ..., (4,), (5,)], 8)',
+ 'mode': 'str([gpu], 1)',
+ 'n_compounds': 'tuple([(100,)], 1)',
+ 'n_steps': 'tuple([(100000000.0,)], 1)',
+ 'r_cut': 'float([2.5], 1)',
+ 'remove_hydrogens': 'bool([True], 1)',
+ 'shrink_kT': 'int([5], 1)',
+ 'shrink_steps': 'float([100000.0], 1)',
+ 'shrink_tau': 'int([1], 1)',
+ 'tau': 'tuple([(0.3,)], 1)',
+\}
+\end{Verbatim}
+\end{tcolorbox}
+        
+    The above schema shows that we are looking at a dataspace of P3HT
+16-mers, at a density of 0.56 \(g/cm^{3}\) at 8 different temperatures
+and 5 different e\_factors. In order to run the order parameter
+analysis, there is a little bookkeeping to be done with units.
+
+PlanckTon runs its simulations in
+\href{https://hoomd-blue.readthedocs.io/en/latest/units.html}{reduced
+units} to reduce floating point error. This means all lengths are scaled
+such that the largest sigma value in the non-bonded potential is equal
+to 1, and so on with the largest epsilon value in the non-bonded
+potential, and the largest particle mass.
+
+This information is stored in the
+\href{https://docs.signac.io/en/latest/jobs.html\#the-job-document}{job
+document} and can be converted to a
+\href{https://unyt.readthedocs.io/en/stable/}{unyt quantity} using the
+\texttt{string\_to\_quantity} function.
+
+In the cell below we set our angle and distance cutoffs for the order
+parameter analysis to 10° and 6\AA~ scaled by the unit length of our
+simulation.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k}{for} \PY{n}{job} \PY{o+ow}{in} \PY{n}{p}\PY{p}{:}
+    \PY{k}{if} \PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{o}{.}\PY{n}{get}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{done}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}\PY{p}{:}
+        \PY{k}{break}
+        
+\PY{n}{ref\PYZus{}energy} \PY{o}{=} \PY{n}{string\PYZus{}to\PYZus{}quantity}\PY{p}{(}\PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{ref\PYZus{}energy}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+\PY{n}{ref\PYZus{}mass} \PY{o}{=} \PY{n}{string\PYZus{}to\PYZus{}quantity}\PY{p}{(}\PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{ref\PYZus{}mass}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+\PY{n}{ref\PYZus{}distance} \PY{o}{=} \PY{n}{string\PYZus{}to\PYZus{}quantity}\PY{p}{(}\PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{ref\PYZus{}distance}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+si}{\PYZob{}}\PY{n}{ref\PYZus{}distance}\PY{l+s+si}{:}\PY{l+s+s2}{.3f}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{ }\PY{l+s+si}{\PYZob{}}\PY{n}{ref\PYZus{}mass}\PY{l+s+si}{:}\PY{l+s+s2}{.2e}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{ }\PY{l+s+si}{\PYZob{}}\PY{n}{ref\PYZus{}energy}\PY{l+s+si}{:}\PY{l+s+s2}{.3f}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+
+\PY{n}{r\PYZus{}max} \PY{o}{=} \PY{n+nb}{float}\PY{p}{(}\PY{l+m+mi}{6} \PY{o}{*} \PY{n}{u}\PY{o}{.}\PY{n}{Angstrom} \PY{o}{/} \PY{n}{ref\PYZus{}distance}\PY{p}{)}
+\PY{n}{a\PYZus{}max} \PY{o}{=} \PY{l+m+mi}{10}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{r\PYZus{}max: }\PY{l+s+si}{\PYZob{}}\PY{n}{r\PYZus{}max}\PY{l+s+si}{:}\PY{l+s+s2}{.2f}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{, a\PYZus{}max: }\PY{l+s+si}{\PYZob{}}\PY{n}{a\PYZus{}max}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+3.564 \AA~ 5.32e-26 kg 0.250 kcal/mol
+r\_max: 1.68, a\_max: 10
+    \end{Verbatim}
+
+    In the following cell, the order parameter analysis is performed over
+the entire workspace. Previously, this was done using
+\href{https://bitbucket.org/cmelab/evan_analysis_scripts/src/master/order_over_time.py}{manual
+indexing and was hardcoded for our P3HT input files}. But this workflow
+has been updated to use \href{https://github.com/cmelab/grits}{GRiTS}
+which uses
+\href{https://www.daylight.com/dayhtml/doc/theory/theory.smarts.html}{SMARTS}
+chemical grammar to detect chemical patterns and map the particles in
+that pattern to a bead. The \texttt{order\_parameter} function in
+\href{https://github.com/cmelab/cmeutils}{cmeutils} then takes this
+mapping and the bead positions from GRiTS and calculates the order
+parameter of the last 10 frames of the trajectory.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{4}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{o}{\PYZpc{}\PYZpc{}time}
+
+\PY{n}{o\PYZus{}dict} \PY{o}{=} \PY{p}{\PYZob{}}\PY{p}{\PYZcb{}}
+\PY{n}{orders} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+\PY{n}{job\PYZus{}strs} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+\PY{n}{ts} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+\PY{n}{efs} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+\PY{n}{keys} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+\PY{k}{for} \PY{p}{(}\PY{n}{ef}\PY{p}{,} \PY{n}{kt}\PY{p}{)}\PY{p}{,} \PY{n}{jobs} \PY{o+ow}{in} \PY{n}{p}\PY{o}{.}\PY{n}{groupby}\PY{p}{(}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{e\PYZus{}factor}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{kT}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}\PY{p}{:}
+    \PY{k}{for} \PY{n}{job} \PY{o+ow}{in} \PY{n}{jobs}\PY{p}{:}
+        \PY{k}{if} \PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{o}{.}\PY{n}{get}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{done}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}\PY{p}{:}
+            \PY{n}{t\PYZus{}si} \PY{o}{=} \PY{n+nb}{int}\PY{p}{(}\PY{n}{kelvin\PYZus{}from\PYZus{}reduced}\PY{p}{(}\PY{n}{kt}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}\PY{n}{ref\PYZus{}energy}\PY{p}{)}\PY{p}{)}
+            \PY{n}{key} \PY{o}{=} \PY{p}{(}\PY{n}{ef}\PY{p}{,} \PY{n}{t\PYZus{}si}\PY{p}{)}
+            \PY{k}{if} \PY{n}{key} \PY{o+ow}{not} \PY{o+ow}{in} \PY{n}{keys}\PY{p}{:}
+                \PY{n}{gsdfile} \PY{o}{=} \PY{n}{job}\PY{o}{.}\PY{n}{fn}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{trajectory.gsd}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+                \PY{n}{cg\PYZus{}gsdfile} \PY{o}{=} \PY{n}{job}\PY{o}{.}\PY{n}{fn}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{cg\PYZhy{}trajectory.gsd}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+                \PY{n}{mapfile} \PY{o}{=} \PY{n}{job}\PY{o}{.}\PY{n}{fn}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{mapping.json}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+                \PY{k}{if} \PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{o}{.}\PY{n}{get}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{order}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)} \PY{o+ow}{is} \PY{k+kc}{None}\PY{p}{:}
+                    \PY{k}{if} \PY{o+ow}{not} \PY{p}{(}\PY{n}{exists}\PY{p}{(}\PY{n}{mapfile}\PY{p}{)} \PY{o+ow}{and} \PY{n}{exists}\PY{p}{(}\PY{n}{cg\PYZus{}gsdfile}\PY{p}{)}\PY{p}{)}\PY{p}{:}
+                        \PY{n}{system} \PY{o}{=} \PY{n}{CG\PYZus{}System}\PY{p}{(}
+                            \PY{n}{gsdfile}\PY{p}{,} 
+                            \PY{n}{beads}\PY{o}{=}\PY{p}{\PYZob{}}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZus{}B}\PY{l+s+s2}{\PYZdq{}} \PY{p}{:} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{c1cscc1}\PY{l+s+s2}{\PYZdq{}}\PY{p}{\PYZcb{}}\PY{p}{,} 
+                            \PY{n}{conversion\PYZus{}dict}\PY{o}{=}\PY{n}{amber\PYZus{}dict}\PY{p}{,}
+                            \PY{n}{add\PYZus{}hydrogens}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,}
+                        \PY{p}{)}
+                        \PY{n}{mapping} \PY{o}{=} \PY{n}{system}\PY{o}{.}\PY{n}{mapping}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZus{}B...c1cscc1}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}
+                        \PY{n}{system}\PY{o}{.}\PY{n}{save\PYZus{}mapping}\PY{p}{(}\PY{n}{mapfile}\PY{p}{)}
+                        \PY{n}{system}\PY{o}{.}\PY{n}{save}\PY{p}{(}\PY{n}{cg\PYZus{}gsdfile}\PY{p}{)}
+                        \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+se}{\PYZbs{}t}\PY{l+s+s2}{CG\PYZus{}System created}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+                    \PY{k}{else}\PY{p}{:}
+                        \PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{mapfile}\PY{p}{)} \PY{k}{as} \PY{n}{f}\PY{p}{:}
+                            \PY{n}{d} \PY{o}{=} \PY{n}{json}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{f}\PY{p}{)}
+                        \PY{n}{mapping} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{stack}\PY{p}{(}\PY{n}{d}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZus{}B...c1cscc1}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+                        \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+se}{\PYZbs{}t}\PY{l+s+s2}{Using mapping}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+                    \PY{n}{order}\PY{p}{,} \PY{n}{\PYZus{}} \PY{o}{=} \PY{n}{order\PYZus{}parameter}\PY{p}{(}\PY{n}{gsdfile}\PY{p}{,} \PY{n}{cg\PYZus{}gsdfile}\PY{p}{,} \PY{n}{mapping}\PY{p}{,} \PY{n}{r\PYZus{}max}\PY{p}{,} \PY{n}{a\PYZus{}max}\PY{p}{)}
+                    \PY{n}{order} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{n}{order}\PY{p}{)}
+                    \PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{order}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]} \PY{o}{=} \PY{n}{order}
+                \PY{k}{else}\PY{p}{:}
+                    \PY{n}{order} \PY{o}{=} \PY{n}{job}\PY{o}{.}\PY{n}{doc}\PY{o}{.}\PY{n}{order}
+                \PY{n}{o\PYZus{}dict}\PY{p}{[}\PY{n}{key}\PY{p}{]} \PY{o}{=} \PY{n}{order}
+                \PY{n}{orders}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{order}\PY{p}{)}
+                \PY{n}{keys}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{key}\PY{p}{)}
+                \PY{n}{ts}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{t\PYZus{}si}\PY{p}{)}
+                \PY{n}{efs}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{ef}\PY{p}{)}
+                \PY{n}{job\PYZus{}strs}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n+nb}{str}\PY{p}{(}\PY{n}{job}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+CPU times: user 29.2 ms, sys: 2.94 ms, total: 32.2 ms
+Wall time: 30 ms
+    \end{Verbatim}
+
+    Next we will plot the order parameter vs T and e\_factor using an
+\href{https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RectBivariateSpline.html\#scipy-interpolate-rectbivariatespline}{interpolating
+function from scipy}.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{x} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{efs}\PY{p}{)}
+\PY{n}{y} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{ts}\PY{p}{)}
+\PY{n}{z} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{orders}\PY{p}{)}
+
+\PY{n}{ux} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{n}{x}\PY{p}{)}
+\PY{n}{uy} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{n}{y}\PY{p}{)}
+\PY{n}{uz} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{zeros}\PY{p}{(}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{uy}\PY{p}{)}\PY{p}{,}\PY{n+nb}{len}\PY{p}{(}\PY{n}{ux}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+
+\PY{c+c1}{\PYZsh{} key = (ef, t\PYZus{}si)}
+\PY{k}{for} \PY{n}{i}\PY{p}{,} \PY{n}{xi} \PY{o+ow}{in} \PY{n+nb}{enumerate}\PY{p}{(}\PY{n}{ux}\PY{p}{)}\PY{p}{:}
+    \PY{k}{for} \PY{n}{j}\PY{p}{,} \PY{n}{yj} \PY{o+ow}{in} \PY{n+nb}{enumerate}\PY{p}{(}\PY{n}{uy}\PY{p}{)}\PY{p}{:}
+        \PY{n}{uz}\PY{p}{[}\PY{n}{j}\PY{p}{,}\PY{n}{i}\PY{p}{]} \PY{o}{=} \PY{n}{o\PYZus{}dict}\PY{p}{[}\PY{p}{(}\PY{n}{xi}\PY{p}{,} \PY{n}{yj}\PY{p}{)}\PY{p}{]}
+
+\PY{n}{f} \PY{o}{=} \PY{n}{RectBivariateSpline}\PY{p}{(}\PY{n}{uy}\PY{p}{,}\PY{n}{ux}\PY{p}{,}\PY{n}{uz}\PY{p}{)}
+
+\PY{n}{xs} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{l+m+mf}{0.2}\PY{p}{,} \PY{l+m+mf}{1.2}\PY{p}{,} \PY{l+m+mi}{15}\PY{p}{)}
+\PY{n}{ys} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{l+m+mi}{50}\PY{p}{,} \PY{l+m+mi}{700}\PY{p}{,} \PY{l+m+mi}{15}\PY{p}{)}
+\PY{n}{zs} \PY{o}{=} \PY{n}{f}\PY{p}{(}\PY{n}{ys}\PY{p}{,} \PY{n}{xs}\PY{p}{)}
+
+\PY{n}{zs}\PY{p}{[}\PY{n}{np}\PY{o}{.}\PY{n}{where}\PY{p}{(}\PY{n}{zs} \PY{o}{\PYZgt{}} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{1}
+\PY{n}{zs}\PY{p}{[}\PY{n}{np}\PY{o}{.}\PY{n}{where}\PY{p}{(}\PY{n}{zs} \PY{o}{\PYZlt{}} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{0}
+
+\PY{n}{plt}\PY{o}{.}\PY{n}{contourf}\PY{p}{(}\PY{n}{xs}\PY{p}{,} \PY{n}{ys}\PY{p}{,} \PY{n}{zs}\PY{p}{,} \PY{l+m+mi}{15}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{rainbow}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{vmax}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{vmin}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
+
+\PY{n}{cbar} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{colorbar}\PY{p}{(}\PY{n}{ticks}\PY{o}{=}\PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{5}\PY{p}{,} \PY{n}{endpoint}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}\PY{p}{)}
+\PY{n}{cbar}\PY{o}{.}\PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{psi\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{fontsize}\PY{o}{=}\PY{l+m+mi}{40}\PY{p}{,} \PY{n}{pad}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{)}
+
+\PY{c+c1}{\PYZsh{} Show the positions of the sample points, just to have some reference}
+\PY{n}{plt}\PY{o}{.}\PY{n}{scatter}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{c}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{k}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{marker}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{x}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{s}\PY{o}{=}\PY{l+m+mi}{100}\PY{p}{)}
+\PY{n}{plt}\PY{o}{.}\PY{n}{xlabel}\PY{p}{(}\PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{epsilon\PYZus{}}\PY{l+s+si}{\PYZob{}s\PYZcb{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{plt}\PY{o}{.}\PY{n}{ylabel}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Temperature (K)}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{plt}\PY{o}{.}\PY{n}{xticks}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{l+m+mf}{0.2}\PY{p}{,} \PY{l+m+mf}{1.2}\PY{p}{,} \PY{l+m+mi}{6}\PY{p}{)}\PY{p}{)}
+\PY{n}{fig} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{gcf}\PY{p}{(}\PY{p}{)}
+\PY{n}{fig}\PY{o}{.}\PY{n}{set\PYZus{}size\PYZus{}inches}\PY{p}{(}\PY{l+m+mi}{12}\PY{p}{,} \PY{l+m+mi}{10}\PY{p}{)}
+\PY{n}{plt}\PY{o}{.}\PY{n}{savefig}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{order\PYZus{}parameter.pdf}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Order_parameter_analysis_9_1.png}
+    \end{center}
+    
+    Even with the changes to our analysis method (using GRiTS instead of
+manual indexing), the forcefield (using a GAFF-UA model with flexible
+thiophenes instead of an OPLS-UA model with rigid thiophenes), and the
+clustering criteria (10° instead of 20°), the trend in the order
+parameter across temperature and e\_factor space appears pretty robust!
+I have included only part a from Miller 2018 below with the plot skewed
+so that the bounds are the same.
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Miller2018_fig3_aonly.png}
+    \end{center}
+
+We can show that our order parameter metric is robust, but how does it
+relate to any physically measurable analysis? To address this question,
+let's look at some diffraction patterns for the highest and lowest order
+jobs to see if our order parameter metric is correlated with differences
+in the periodic structure. We'll be using
+\href{https://github.com/cmelab/GIXStapose}{GIXStapose} to visualize the
+real space structure and its simulated diffraction pattern.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{6}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{highest\PYZus{}order\PYZus{}jobs} \PY{o}{=} \PY{p}{[}\PY{n}{job\PYZus{}strs}\PY{p}{[}\PY{n}{orders}\PY{o}{.}\PY{n}{index}\PY{p}{(}\PY{n}{i}\PY{p}{)}\PY{p}{]} \PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{sorted}\PY{p}{(}\PY{n}{orders}\PY{p}{)}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{3}\PY{p}{:}\PY{p}{]}\PY{p}{]}
+\PY{n}{lowest\PYZus{}order\PYZus{}jobs} \PY{o}{=} \PY{p}{[}\PY{n}{job\PYZus{}strs}\PY{p}{[}\PY{n}{orders}\PY{o}{.}\PY{n}{index}\PY{p}{(}\PY{n}{i}\PY{p}{)}\PY{p}{]} \PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{sorted}\PY{p}{(}\PY{n}{orders}\PY{p}{)}\PY{p}{[}\PY{p}{:}\PY{l+m+mi}{4}\PY{p}{]}\PY{p}{]}
+
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Higest order}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{k}{for} \PY{n}{job\PYZus{}id} \PY{o+ow}{in} \PY{n}{highest\PYZus{}order\PYZus{}jobs}\PY{p}{:}
+    \PY{n}{job} \PY{o}{=} \PY{n}{p}\PY{o}{.}\PY{n}{open\PYZus{}job}\PY{p}{(}\PY{n+nb}{id}\PY{o}{=}\PY{n}{job\PYZus{}id}\PY{p}{)}
+    \PY{n}{T\PYZus{}SI} \PY{o}{=} \PY{n+nb}{int}\PY{p}{(}\PY{n}{kelvin\PYZus{}from\PYZus{}reduced}\PY{p}{(}\PY{n}{job}\PY{o}{.}\PY{n}{sp}\PY{o}{.}\PY{n}{kT}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}\PY{n}{ref\PYZus{}energy}\PY{p}{)}\PY{p}{)}
+    \PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{e\PYZus{}factor: }\PY{l+s+si}{\PYZob{}}\PY{n}{job}\PY{o}{.}\PY{n}{sp}\PY{o}{.}\PY{n}{e\PYZus{}factor}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{, T: }\PY{l+s+si}{\PYZob{}}\PY{n}{T\PYZus{}SI}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{K}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+    \PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+se}{\PYZbs{}t}\PY{l+s+si}{\PYZob{}}\PY{n}{job}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+    
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s2}{Lowest order}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{k}{for} \PY{n}{job\PYZus{}id} \PY{o+ow}{in} \PY{n}{lowest\PYZus{}order\PYZus{}jobs}\PY{p}{:}
+    \PY{n}{job} \PY{o}{=} \PY{n}{p}\PY{o}{.}\PY{n}{open\PYZus{}job}\PY{p}{(}\PY{n+nb}{id}\PY{o}{=}\PY{n}{job\PYZus{}id}\PY{p}{)}
+    \PY{n}{T\PYZus{}SI} \PY{o}{=} \PY{n+nb}{int}\PY{p}{(}\PY{n}{kelvin\PYZus{}from\PYZus{}reduced}\PY{p}{(}\PY{n}{job}\PY{o}{.}\PY{n}{sp}\PY{o}{.}\PY{n}{kT}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}\PY{n}{ref\PYZus{}energy}\PY{p}{)}\PY{p}{)}
+    \PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{e\PYZus{}factor: }\PY{l+s+si}{\PYZob{}}\PY{n}{job}\PY{o}{.}\PY{n}{sp}\PY{o}{.}\PY{n}{e\PYZus{}factor}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{, T: }\PY{l+s+si}{\PYZob{}}\PY{n}{T\PYZus{}SI}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{K}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+    \PY{n+nb}{print}\PY{p}{(}\PY{l+s+sa}{f}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+se}{\PYZbs{}t}\PY{l+s+si}{\PYZob{}}\PY{n}{job}\PY{l+s+si}{\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Higest order
+e\_factor: 0.4, T: 188K
+        6289cb58ab91a927f702b7cf238820aa
+e\_factor: 0.4, T: 251K
+        16db9573e2e2c6a027abad40cf87733e
+e\_factor: 0.2, T: 125K
+        c1e543f38d9f49677b3e3649018152b8
+
+
+Lowest order
+e\_factor: 0.2, T: 629K
+        c0fd30e6247f95e9c26984ec5f24d99e
+e\_factor: 0.4, T: 629K
+        e8e42f76f02e02e686332ce8127e1b24
+e\_factor: 0.2, T: 503K
+        349a22231886a7a46aeb7f20c95204e0
+e\_factor: 0.6, T: 629K
+        d2da0d6355f3d11fd0132bcf8433df7e
+    \end{Verbatim}
+
+    First let's look at one of the high order jobs (e\_factor: 0.4, T:
+251K). We'll first visualize the centers of the thiophenes. (It is a
+little less busy than the atomistic sturcture and allows us to more
+easily see the lamellar spacing.)
+
+The camera position was chosen using the GIXStapose GUI to rotate the
+structure as to best see the lamellae.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{7}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{job} \PY{o}{=} \PY{n}{p}\PY{o}{.}\PY{n}{open\PYZus{}job}\PY{p}{(}\PY{n+nb}{id}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{16db9573e2e2c6a027abad40cf87733e}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{cg\PYZus{}gsd} \PY{o}{=} \PY{n}{job}\PY{o}{.}\PY{n}{fn}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{cg\PYZhy{}trajectory.gsd}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{scene}\PY{p}{,} \PY{n}{info} \PY{o}{=} \PY{n}{get\PYZus{}scene}\PY{p}{(}\PY{n}{cg\PYZus{}gsd}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{p}{\PYZob{}}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZus{}B}\PY{l+s+s2}{\PYZdq{}}\PY{p}{:} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{lightblue}\PY{l+s+s2}{\PYZdq{}}\PY{p}{\PYZcb{}}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{n}{ref\PYZus{}distance}\PY{p}{)}
+\PY{n}{cam} \PY{o}{=} \PY{n}{camera}\PY{o}{.}\PY{n}{Orthographic}\PY{p}{(}
+    \PY{n}{position} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{8.133}\PY{p}{,} \PY{l+m+mf}{5.203}\PY{p}{,} \PY{l+m+mf}{43.865}\PY{p}{]}\PY{p}{,}
+    \PY{n}{look\PYZus{}at} \PY{o}{=}  \PY{p}{[}\PY{l+m+mf}{0.000}\PY{p}{,} \PY{l+m+mf}{0.000}\PY{p}{,} \PY{l+m+mf}{0.000}\PY{p}{]}\PY{p}{,}
+    \PY{n}{up} \PY{o}{=}       \PY{p}{[}\PY{l+m+mf}{0.900}\PY{p}{,} \PY{l+m+mf}{0.424}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mf}{0.101}\PY{p}{]}\PY{p}{,}
+    \PY{n}{height} \PY{o}{=}   \PY{l+m+mf}{31.896}
+\PY{p}{)}
+\PY{n}{scene}\PY{o}{.}\PY{n}{camera} \PY{o}{=} \PY{n}{cam}
+
+\PY{n}{scene}\PY{o}{.}\PY{n}{geometry}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{radius}\PY{p}{[}\PY{p}{:}\PY{p}{]} \PY{o}{*}\PY{o}{=} \PY{l+m+mi}{3}
+
+\PY{n}{output} \PY{o}{=} \PY{n}{pathtrace}\PY{p}{(}\PY{n}{scene}\PY{p}{,} \PY{n}{light\PYZus{}samples}\PY{o}{=}\PY{l+m+mi}{40}\PY{p}{,} \PY{n}{w}\PY{o}{=}\PY{l+m+mi}{600}\PY{p}{,} \PY{n}{h}\PY{o}{=}\PY{l+m+mi}{600}\PY{p}{)}
+
+\PY{n}{image} \PY{o}{=} \PY{n}{Image}\PY{o}{.}\PY{n}{fromarray}\PY{p}{(}\PY{n}{output}\PY{p}{[}\PY{p}{:}\PY{p}{]}\PY{p}{,} \PY{n}{mode}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{RGBA}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{image}\PY{o}{.}\PY{n}{save}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{cg\PYZhy{}trajectory\PYZus{}scene.png}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+
+\PY{n}{output}
+\end{Verbatim}
+\end{tcolorbox}
+ 
+            
+\prompt{Out}{outcolor}{7}{}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Order_parameter_analysis_13_0.png}
+    \end{center}
+    
+
+    We can see that this high order structure has clear repeated planes of
+thiophenes, even within these planes there appears to be some ordering
+most likely due to pi orbital overlap in the thiophenes. Let's look at
+the diffraction pattern of this view:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{8}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{d} \PY{o}{=} \PY{n}{Diffractometer}\PY{p}{(}\PY{n}{length\PYZus{}scale}\PY{o}{=}\PY{n+nb}{float}\PY{p}{(}\PY{n}{ref\PYZus{}distance}\PY{p}{)}\PY{p}{)}
+\PY{n}{d}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{positions}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{,} \PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{box}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{[}\PY{p}{:}\PY{l+m+mi}{3}\PY{p}{]}\PY{p}{)}
+\PY{n}{d}\PY{o}{.}\PY{n}{diffract\PYZus{}from\PYZus{}camera}\PY{p}{(}\PY{n}{cam}\PY{p}{)}
+\PY{n}{fig}\PY{p}{,} \PY{n}{ax} \PY{o}{=} \PY{n}{d}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{p}{)}
+\PY{n}{y\PYZus{}min}\PY{p}{,} \PY{n}{y\PYZus{}max} \PY{o}{=} \PY{n}{ax}\PY{o}{.}\PY{n}{get\PYZus{}ylim}\PY{p}{(}\PY{p}{)}
+\PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}ylim}\PY{p}{(}\PY{l+m+mf}{-0.01}\PY{p}{,} \PY{n}{y\PYZus{}max}\PY{p}{)}
+\PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Order_parameter_analysis_15_0.png}
+    \end{center}
+    
+    In this view, we can see bright peaks in the \(q_{yy}\)-direction
+corresponding to the lamellar spacing. The pi-stacking can also faintly
+be seen in the \(q_{xx}\)-direction. We can label these peaks with their
+distance from the origin using the interactive PeakLabeller class
+provided in GIXStapose. (To see a demo of how to use this class check
+out the
+\href{https://github.com/cmelab/GIXStapose/blob/master/examples/Figure_Example.ipynb}{GIXStapose
+example}.)
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/resize_labelled_peaks.png}
+    \end{center}
+
+These peaks correspond to periodic distances of 17.24 \AA~ and 3.61 \AA~
+which are in the right ballpark for P3HT:
+\href{https://www.sciencedirect.com/science/article/pii/S1566119913000840?via\%3Dihub}{Duong
+2013} reports a lamellar spacing of 16.5 \AA~ and a pi-stacking spacing of
+3.83 \AA~ for neat P3HT.
+
+In the next cell, we'll visualize the overlay of the coarse grain
+structure with the atomistic one:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{9}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{ua\PYZus{}gsd} \PY{o}{=} \PY{n}{job}\PY{o}{.}\PY{n}{fn}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{trajectory.gsd}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{ua\PYZus{}scene}\PY{p}{,} \PY{n}{\PYZus{}} \PY{o}{=} \PY{n}{get\PYZus{}scene}\PY{p}{(}
+    \PY{n}{ua\PYZus{}gsd}\PY{p}{,} 
+    \PY{n}{color}\PY{o}{=}\PY{p}{\PYZob{}}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{c3}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{grey}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{cc}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{grey}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{cd}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{grey}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{ss}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{yellow}\PY{l+s+s2}{\PYZdq{}}\PY{p}{\PYZcb{}}\PY{p}{,} 
+    \PY{n}{scale}\PY{o}{=}\PY{n}{ref\PYZus{}distance}\PY{p}{,}
+    \PY{n}{scene}\PY{o}{=}\PY{n}{scene}
+\PY{p}{)}
+
+\PY{n}{ua\PYZus{}scene}\PY{o}{.}\PY{n}{camera} \PY{o}{=} \PY{n}{cam}
+
+\PY{n}{ua\PYZus{}scene}\PY{o}{.}\PY{n}{geometry}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{material}\PY{o}{.}\PY{n}{spec\PYZus{}trans} \PY{o}{=} \PY{l+m+mf}{0.5}
+
+\PY{n}{ua\PYZus{}scene}\PY{o}{.}\PY{n}{lights} \PY{o}{=} \PY{n}{light}\PY{o}{.}\PY{n}{cloudy}\PY{p}{(}\PY{p}{)}
+
+\PY{n}{output} \PY{o}{=} \PY{n}{pathtrace}\PY{p}{(}\PY{n}{ua\PYZus{}scene}\PY{p}{,} \PY{n}{light\PYZus{}samples}\PY{o}{=}\PY{l+m+mi}{40}\PY{p}{,} \PY{n}{w}\PY{o}{=}\PY{l+m+mi}{600}\PY{p}{,} \PY{n}{h}\PY{o}{=}\PY{l+m+mi}{600}\PY{p}{)}
+
+\PY{n}{image} \PY{o}{=} \PY{n}{Image}\PY{o}{.}\PY{n}{fromarray}\PY{p}{(}\PY{n}{output}\PY{p}{[}\PY{p}{:}\PY{p}{]}\PY{p}{,} \PY{n}{mode}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{RGBA}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{image}\PY{o}{.}\PY{n}{save}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{cg\PYZhy{}overlay\PYZus{}scene.png}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+
+\PY{n}{output}
+\end{Verbatim}
+\end{tcolorbox}
+ 
+            
+\prompt{Out}{outcolor}{9}{}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Order_parameter_analysis_17_0.png}
+    \end{center}
+    
+
+    When we view this overlay (thiophene center beads show in translucent
+blue, atomistic carbons in grey and sulfur in yellow), it becomes more
+clear that this lamellar spacing is due to the regions with the alkyl
+tails interacting.
+
+Finally let's look at one of the low order jobs (e\_factor: 0.2, T:
+629K):
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{10}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{job} \PY{o}{=} \PY{n}{p}\PY{o}{.}\PY{n}{open\PYZus{}job}\PY{p}{(}\PY{n+nb}{id}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{c0fd30e6247f95e9c26984ec5f24d99e}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{cg\PYZus{}gsd} \PY{o}{=} \PY{n}{job}\PY{o}{.}\PY{n}{fn}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{cg\PYZhy{}trajectory.gsd}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{scene}\PY{p}{,} \PY{n}{info} \PY{o}{=} \PY{n}{get\PYZus{}scene}\PY{p}{(}\PY{n}{cg\PYZus{}gsd}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{p}{\PYZob{}}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZus{}B}\PY{l+s+s2}{\PYZdq{}}\PY{p}{:} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{lightblue}\PY{l+s+s2}{\PYZdq{}}\PY{p}{\PYZcb{}}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{n}{ref\PYZus{}distance}\PY{p}{)}
+
+\PY{n}{scene}\PY{o}{.}\PY{n}{geometry}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{radius}\PY{p}{[}\PY{p}{:}\PY{p}{]} \PY{o}{*}\PY{o}{=} \PY{l+m+mi}{3}
+
+\PY{n}{output} \PY{o}{=} \PY{n}{pathtrace}\PY{p}{(}\PY{n}{scene}\PY{p}{,} \PY{n}{light\PYZus{}samples}\PY{o}{=}\PY{l+m+mi}{40}\PY{p}{,} \PY{n}{w}\PY{o}{=}\PY{l+m+mi}{600}\PY{p}{,} \PY{n}{h}\PY{o}{=}\PY{l+m+mi}{600}\PY{p}{)}
+
+\PY{n}{image} \PY{o}{=} \PY{n}{Image}\PY{o}{.}\PY{n}{fromarray}\PY{p}{(}\PY{n}{output}\PY{p}{[}\PY{p}{:}\PY{p}{]}\PY{p}{,} \PY{n}{mode}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{RGBA}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{image}\PY{o}{.}\PY{n}{save}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{cg\PYZhy{}trajectory\PYZhy{}amorphous\PYZus{}scene.png}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+
+\PY{n}{output}
+\end{Verbatim}
+\end{tcolorbox}
+ 
+            
+\prompt{Out}{outcolor}{10}{}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Order_parameter_analysis_19_0.png}
+    \end{center}
+    
+
+    This view shows that the packing looks basically random.
+
+And we can confirm this by examing the diffraction pattern:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{11}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{d} \PY{o}{=} \PY{n}{Diffractometer}\PY{p}{(}\PY{n}{length\PYZus{}scale}\PY{o}{=}\PY{n+nb}{float}\PY{p}{(}\PY{n}{ref\PYZus{}distance}\PY{p}{)}\PY{p}{)}
+\PY{n}{d}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{positions}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{,} \PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{box}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{[}\PY{p}{:}\PY{l+m+mi}{3}\PY{p}{]}\PY{p}{)}
+\PY{n}{d}\PY{o}{.}\PY{n}{diffract\PYZus{}from\PYZus{}camera}\PY{p}{(}\PY{n}{cam}\PY{p}{)}
+\PY{n}{fig}\PY{p}{,} \PY{n}{ax} \PY{o}{=} \PY{n}{d}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{p}{)}
+\PY{n}{y\PYZus{}min}\PY{p}{,} \PY{n}{y\PYZus{}max} \PY{o}{=} \PY{n}{ax}\PY{o}{.}\PY{n}{get\PYZus{}ylim}\PY{p}{(}\PY{p}{)}
+\PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}ylim}\PY{p}{(}\PY{l+m+mf}{-0.01}\PY{p}{,} \PY{n}{y\PYZus{}max}\PY{p}{)}
+\PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Order_parameter_analysis_21_0.png}
+    \end{center}
+    
+    The general lack of peaks suggests that there are few periodic features
+to be found.
+
+In conclusion, this analysis has shown that we can reproduce our prior
+work with updated tools, the order parameter metric is robust across
+different forcefields and relates to the prominence of peaks in the
+diffraction pattern.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{ }{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+
+\end{Verbatim}
+\end{tcolorbox}
+

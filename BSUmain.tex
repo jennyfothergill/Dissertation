@@ -1,0 +1,357 @@
+% Graduate thesis BSU Format
+% Kasper van Wijk (original author)
+% Dylan Mikesell (current maintainer)
+% \immediate\write18{makeindex -s nomencl.ist -o "\jobname.nls" "\jobname.nlo"}
+
+% if you don't want two-sided printing, erase the twoside option
+% from the following line:
+\documentclass[12pt]{report}
+
+\usepackage[utf8]{inputenc}
+%\usepackage{hyperref}
+%\usepackage{wrapfig}
+%\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage[square,numbers]{natbib}
+\setcitestyle{numbers}
+%\usepackage{amsmath}
+
+% custom file for BSU style by KvW, 2006:
+\usepackage{BSUthesis}
+% \usepackage{acro}
+% probably a good idea for the nomenclature entries:
+% \acsetup{first-style=short}
+
+%% BEGIN NOTEBOOK
+% Pygments definitions
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+\let\PY@ul=\relax \let\PY@tc=\relax%
+\let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+\PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+\PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\@namedef{PY@tok@w}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\@namedef{PY@tok@c}{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\@namedef{PY@tok@cp}{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\@namedef{PY@tok@k}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@kp}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@kt}{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\@namedef{PY@tok@o}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@ow}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\@namedef{PY@tok@nb}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@nf}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\@namedef{PY@tok@nc}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\@namedef{PY@tok@nn}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\@namedef{PY@tok@ne}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\@namedef{PY@tok@nv}{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\@namedef{PY@tok@no}{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\@namedef{PY@tok@nl}{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\@namedef{PY@tok@ni}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\@namedef{PY@tok@na}{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\@namedef{PY@tok@nt}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@nd}{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\@namedef{PY@tok@s}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@sd}{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@si}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\@namedef{PY@tok@se}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\@namedef{PY@tok@sr}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\@namedef{PY@tok@ss}{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\@namedef{PY@tok@sx}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@m}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@gh}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\@namedef{PY@tok@gu}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\@namedef{PY@tok@gd}{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\@namedef{PY@tok@gi}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\@namedef{PY@tok@gr}{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\@namedef{PY@tok@ge}{\let\PY@it=\textit}
+\@namedef{PY@tok@gs}{\let\PY@bf=\textbf}
+\@namedef{PY@tok@gp}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\@namedef{PY@tok@go}{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\@namedef{PY@tok@gt}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\@namedef{PY@tok@err}{\def\PY@bc##1{{\setlength{\fboxsep}{\string -\fboxrule}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}}
+\@namedef{PY@tok@kc}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@kd}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@kn}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@kr}{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@bp}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\@namedef{PY@tok@fm}{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\@namedef{PY@tok@vc}{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\@namedef{PY@tok@vg}{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\@namedef{PY@tok@vi}{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\@namedef{PY@tok@vm}{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\@namedef{PY@tok@sa}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@sb}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@sc}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@dl}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@s2}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@sh}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@s1}{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\@namedef{PY@tok@mb}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@mf}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@mh}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@mi}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@il}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@mo}{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\@namedef{PY@tok@ch}{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\@namedef{PY@tok@cm}{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\@namedef{PY@tok@cpf}{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\@namedef{PY@tok@c1}{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\@namedef{PY@tok@cs}{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+% For linebreaks inside Verbatim environment from package fancyvrb. 
+\makeatletter
+\newbox\Wrappedcontinuationbox 
+\newbox\Wrappedvisiblespacebox 
+\newcommand*\Wrappedvisiblespace {\textcolor{red}{\textvisiblespace}} 
+\newcommand*\Wrappedcontinuationsymbol {\textcolor{red}{\llap{\tiny$\m@th\hookrightarrow$}}} 
+\newcommand*\Wrappedcontinuationindent {3ex } 
+\newcommand*\Wrappedafterbreak {\kern\Wrappedcontinuationindent\copy\Wrappedcontinuationbox} 
+% Take advantage of the already applied Pygments mark-up to insert 
+% potential linebreaks for TeX processing. 
+%        {, <, #, %, $, ' and ": go to next line. 
+%        _, }, ^, &, >, - and ~: stay at end of broken line. 
+% Use of \textquotesingle for straight quote. 
+\newcommand*\Wrappedbreaksatspecials {% 
+\def\PYGZus{\discretionary{\char`\_}{\Wrappedafterbreak}{\char`\_}}% 
+\def\PYGZob{\discretionary{}{\Wrappedafterbreak\char`\{}{\char`\{}}% 
+\def\PYGZcb{\discretionary{\char`\}}{\Wrappedafterbreak}{\char`\}}}% 
+\def\PYGZca{\discretionary{\char`\^}{\Wrappedafterbreak}{\char`\^}}% 
+\def\PYGZam{\discretionary{\char`\&}{\Wrappedafterbreak}{\char`\&}}% 
+\def\PYGZlt{\discretionary{}{\Wrappedafterbreak\char`\<}{\char`\<}}% 
+\def\PYGZgt{\discretionary{\char`\>}{\Wrappedafterbreak}{\char`\>}}% 
+\def\PYGZsh{\discretionary{}{\Wrappedafterbreak\char`\#}{\char`\#}}% 
+\def\PYGZpc{\discretionary{}{\Wrappedafterbreak\char`\%}{\char`\%}}% 
+\def\PYGZdl{\discretionary{}{\Wrappedafterbreak\char`\$}{\char`\$}}% 
+\def\PYGZhy{\discretionary{\char`\-}{\Wrappedafterbreak}{\char`\-}}% 
+\def\PYGZsq{\discretionary{}{\Wrappedafterbreak\textquotesingle}{\text quotesingle}}% 
+\def\PYGZdq{\discretionary{}{\Wrappedafterbreak\char`\"}{\char`\"}}% 
+\def\PYGZti{\discretionary{\char`\~}{\Wrappedafterbreak}{\char`\~}}% 
+} 
+% Some characters . , ; ? ! / are not pygmentized. 
+% This macro makes them "active" and they will insert potential linebreaks %% 
+\newcommand*\Wrappedbreaksatpunct {% 
+\lccode`\~`\.\lowercase{\def~}{\discretionary{\hbox{\char`\.}}{\Wrappedafterbreak}{\hbox{\char`\.}}}% 
+\lccode`\~`\,\lowercase{\def~}{\discretionary{\hbox{\char`\,}}{\Wrappedafterbreak}{\hbox{\char`\,}}}% 
+\lccode`\~`\;\lowercase{\def~}{\discretionary{\hbox{\char`\;}}{\Wrappedafterbreak}{\hbox{\char`\;}}}% 
+\lccode`\~`\:\lowercase{\def~}{\discretionary{\hbox{\char`\:}}{\Wrappedafterbreak}{\hbox{\char`\:}}}% 
+\lccode`\~`\?\lowercase{\def~}{\discretionary{\hbox{\char`\?}}{\Wrappedafterbreak}{\hbox{\char`\?}}}% 
+\lccode`\~`\!\lowercase{\def~}{\discretionary{\hbox{\char`\!}}{\Wrappedafterbreak}{\hbox{\char`\!}}}% 
+\lccode`\~`\/\lowercase{\def~}{\discretionary{\hbox{\char`\/}}{\Wrappedafterbreak}{\hbox{\char`\/}}}% 
+\catcode`\.\active
+\catcode`\,\active 
+\catcode`\;\active
+\catcode`\:\active
+\catcode`\?\active
+\catcode`\!\active
+\catcode`\/\active 
+\lccode`\~`\~ 	
+}
+\makeatother
+
+\let\OriginalVerbatim=\Verbatim
+\makeatletter
+\renewcommand{\Verbatim}[1][1]{%
+%\parskip\z@skip
+\sbox\Wrappedcontinuationbox {\Wrappedcontinuationsymbol}%
+\sbox\Wrappedvisiblespacebox {\FV@SetupFont\Wrappedvisiblespace}%
+\def\FancyVerbFormatLine ##1{\hsize\linewidth
+\vtop{\raggedright\hyphenpenalty\z@\exhyphenpenalty\z@
+\doublehyphendemerits\z@\finalhyphendemerits\z@
+\strut ##1\strut}%
+}%
+% If the linebreak is at a space, the latter will be displayed as visible
+% space at end of first line, and a continuation symbol starts next line.
+% Stretch/shrink are however usually zero for typewriter font.
+\def\FV@Space {%
+\nobreak\hskip\z@ plus\fontdimen3\font minus\fontdimen4\font
+\discretionary{\copy\Wrappedvisiblespacebox}{\Wrappedafterbreak}
+{\kern\fontdimen2\font}%
+}%
+
+% Allow breaks at special characters using \PYG... macros.
+\Wrappedbreaksatspecials
+% Breaks at punctuation characters . , ; ? ! and / need catcode=\active 	%% 
+\OriginalVerbatim[#1,codes*=\Wrappedbreaksatpunct]%
+}
+\makeatother
+
+% Exact colors from NB
+\definecolor{incolor}{HTML}{303F9F}
+\definecolor{outcolor}{HTML}{D84315}
+\definecolor{cellborder}{HTML}{CFCFCF}
+\definecolor{cellbackground}{HTML}{F7F7F7}
+
+% prompt
+\makeatletter
+\newcommand{\boxspacing}{\kern\kvtcb@left@rule\kern\kvtcb@boxsep}
+\makeatother
+\newcommand{\prompt}[4]{
+{\ttfamily\llap{{\color{#2}[#3]:\hspace{3pt}#4}}\vspace{-\baselineskip}}
+}
+
+% Colors for the hyperref package
+\definecolor{urlcolor}{rgb}{0,.145,.698}
+\definecolor{linkcolor}{rgb}{0,0,0} %{.71,0.21,0.01}
+\definecolor{citecolor}{rgb}{0,0,0} %{.12,.54,.11}
+
+% Prevent overflowing lines due to hard-to-break entities
+\sloppy 
+% Setup hyperref package
+\hypersetup{
+  breaklinks=true,  % so long urls are correctly broken across lines
+  colorlinks=true,
+  urlcolor=urlcolor,
+  citecolor=citecolor,
+  linkcolor=linkcolor
+  }
+% Slightly bigger margins than the latex defaults
+
+%\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+
+%% END NOTEBOOK
+
+\newcommand\inputfile[1]{%
+    \InputIfFileExists{#1}{}{\typeout{No file #1.}}%
+} % this command keep latexmk from erroring when \input is missing
+
+% For abbreviations
+\makeglossaries
+\loadglsentries{abbreviations}
+% For symbols and nomenclature 
+\makenomenclature
+\input{nomenclature}
+
+\begin{document}
+
+%------------------------------------------------------------------------------
+% bunch of fields to enter:
+%------------------------------------------------------------------------------
+\author{Jenny W. Fothergill}
+%------------------------------------------------------------------------------
+\degree{Doctor of Philosophy}
+% \degreetype{Doctor of Philosophy}
+%------------------------------------------------------------------------------
+\discipline{Materials Science and Engineering}
+%------------------------------------------------------------------------------
+\title{My Title} % use correct capitalization
+%------------------------------------------------------------------------------
+\advisor{Eric Jankowski}{Ph.D.}
+\coadvisor{Matthew D. King}{Ph.D.}
+\committeeMemberA{Christopher R. Iacovella}{Ph.D.}
+\committeeMemberB{Matthew L. Ferguson}{Ph.D.}
+%------------------------------------------------------------------------------
+\dean{Tammi Vacha-Haase}{Dean of the Graduate College}
+%------------------------------------------------------------------------------
+% insert month and year of your thesis, only:
+\date{9 February 2022}
+\oralexamdate{25 October 2017}
+%------------------------------------------------------------------------------
+% optional external member: 
+% \extmember{Dr. Jane Doe}{Doctor of Experimental Philosophy}{University of Chicago}
+%------------------------------------------------------------------------------
+\maketitle
+%------------------------------------------------------------------------------
+\makecopyright
+%------------------------------------------------------------------------------
+\submittalsheet
+%------------------------------------------------------------------------------
+\setcounter{page}{4}
+\input dedication
+%------------------------------------------------------------------------------
+\input acknowledgment
+%------------------------------------------------------------------------------
+\input autobiographics
+%------------------------------------------------------------------------------
+\input abstract
+%------------------------------------------------------------------------------
+% \cleardoublepage
+\tableofcontents
+%------------------------------------------------------------------------------
+\cleardoublepage
+\addcontentsline{toc}{chapter}{List of figures} 
+\listoffigures
+%------------------------------------------------------------------------------
+\cleardoublepage
+\addcontentsline{toc}{chapter}{List of tables} 
+\listoftables
+%------------------------------------------------------------------------------
+% print abbreviations
+\printglossary[title={List of abbreviations},type=\acronymtype]
+%------------------------------------------------------------------------------
+% print symbols
+% \cleardoublepage% or \clearpage
+% \addcontentsline{toc}{chapter}{List of symbols} 
+% \renewcommand{\nomname}{List of symbols}
+% \markboth{\nomname}{\nomname}% maybe with \MakeUppercase
+% \printnomenclature
+
+
+ % \printnomenclature
+
+%------------------------------------------------------------------------------
+% start of main text (reset pagenumbers, etc.):
+%------------------------------------------------------------------------------
+\begintext
+%------------------------------------------------------------------------------
+\input intro
+%------------------------------------------------------------------------------
+\input pub1
+%------------------------------------------------------------------------------
+\input pub2
+%------------------------------------------------------------------------------
+\input pub3
+%------------------------------------------------------------------------------
+\input pub4
+%------------------------------------------------------------------------------
+\input p3ht_validation
+%------------------------------------------------------------------------------
+\input reproducibility
+%------------------------------------------------------------------------------
+% bibliography:
+% \cleardoublepage
+\addcontentsline{toc}{chapter}{References} 
+\bibliography{cmelab-Jenny-Dissertation}
+%\bibliographystyle{authordate1} 
+\bibliographystyle{unsrtnat} 
+%------------------------------------------------------------------------------
+% \cleardoublepage
+\addcontentsline{toc}{chapter}{Appendices}
+\appendix
+
+\input pub1_SI
+
+\input pub2_SI
+
+\input pub3_SI
+
+\input appendix
+%------------------------------------------------------------------------------
+\end{document}
