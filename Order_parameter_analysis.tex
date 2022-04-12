@@ -383,9 +383,12 @@ the diffraction pattern of this view:
 \PY{n}{d} \PY{o}{=} \PY{n}{Diffractometer}\PY{p}{(}\PY{n}{length\PYZus{}scale}\PY{o}{=}\PY{n+nb}{float}\PY{p}{(}\PY{n}{ref\PYZus{}distance}\PY{p}{)}\PY{p}{)}
 \PY{n}{d}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{positions}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{,} \PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{box}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{[}\PY{p}{:}\PY{l+m+mi}{3}\PY{p}{]}\PY{p}{)}
 \PY{n}{d}\PY{o}{.}\PY{n}{diffract\PYZus{}from\PYZus{}camera}\PY{p}{(}\PY{n}{cam}\PY{p}{)}
-\PY{n}{fig}\PY{p}{,} \PY{n}{ax} \PY{o}{=} \PY{n}{d}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{p}{)}
+\PY{n}{fig}\PY{p}{,} \PY{n}{ax} \PY{o}{=} \PY{n}{d}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{cmap}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{jet}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{crop}\PY{o}{=}\PY{l+m+mf}{2.6}\PY{p}{)}
 \PY{n}{y\PYZus{}min}\PY{p}{,} \PY{n}{y\PYZus{}max} \PY{o}{=} \PY{n}{ax}\PY{o}{.}\PY{n}{get\PYZus{}ylim}\PY{p}{(}\PY{p}{)}
-\PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}ylim}\PY{p}{(}\PY{l+m+mf}{-0.01}\PY{p}{,} \PY{n}{y\PYZus{}max}\PY{p}{)}
+\PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}ylim}\PY{p}{(}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.01}\PY{p}{,} \PY{n}{y\PYZus{}max}\PY{p}{)}\PY{p}{)}
+\PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{set\PYZus{}visible}\PY{p}{(}\PY{k+kc}{False}\PY{p}{)} \PY{k}{for} \PY{n}{l} \PY{o+ow}{in} \PY{n}{ax}\PY{o}{.}\PY{n}{xaxis}\PY{o}{.}\PY{n}{get\PYZus{}ticklabels}\PY{p}{(}\PY{p}{)}\PY{p}{[}\PY{p}{:}\PY{p}{:}\PY{l+m+mi}{2}\PY{p}{]}\PY{p}{]}
+\PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{set\PYZus{}visible}\PY{p}{(}\PY{k+kc}{False}\PY{p}{)} \PY{k}{for} \PY{n}{l} \PY{o+ow}{in} \PY{n}{ax}\PY{o}{.}\PY{n}{yaxis}\PY{o}{.}\PY{n}{get\PYZus{}ticklabels}\PY{p}{(}\PY{p}{)}\PY{p}{[}\PY{p}{:}\PY{p}{:}\PY{l+m+mi}{2}\PY{p}{]}\PY{p}{]}
+
 \PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
@@ -394,9 +397,9 @@ the diffraction pattern of this view:
     \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{figures/opa_notebook/Order_parameter_analysis_15_0.png}
     \end{center}
     
-    In this view, we can see bright peaks in the \(q_{yy}\)-direction
+    In this view, we can see bright peaks in the \(q_{z}\)-direction
 corresponding to the lamellar spacing. The pi-stacking can also faintly
-be seen in the \(q_{xx}\)-direction. We can label these peaks with their
+be seen in the \(q_{xy}\)-direction. We can label these peaks with their
 distance from the origin using the interactive PeakLabeller class
 provided in GIXStapose. (To see a demo of how to use this class check
 out the
@@ -486,7 +489,7 @@ Finally let's look at one of the low order jobs (e\_factor: 0.2, T:
 
     This view shows that the packing looks basically random.
 
-And we can confirm this by examing the diffraction pattern:
+And we can confirm this by examining the diffraction pattern:
 
     \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{11}{\boxspacing}
@@ -494,9 +497,12 @@ And we can confirm this by examing the diffraction pattern:
 \PY{n}{d} \PY{o}{=} \PY{n}{Diffractometer}\PY{p}{(}\PY{n}{length\PYZus{}scale}\PY{o}{=}\PY{n+nb}{float}\PY{p}{(}\PY{n}{ref\PYZus{}distance}\PY{p}{)}\PY{p}{)}
 \PY{n}{d}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{positions}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{,} \PY{n}{info}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{box}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{[}\PY{p}{:}\PY{l+m+mi}{3}\PY{p}{]}\PY{p}{)}
 \PY{n}{d}\PY{o}{.}\PY{n}{diffract\PYZus{}from\PYZus{}camera}\PY{p}{(}\PY{n}{cam}\PY{p}{)}
-\PY{n}{fig}\PY{p}{,} \PY{n}{ax} \PY{o}{=} \PY{n}{d}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{p}{)}
+\PY{n}{fig}\PY{p}{,} \PY{n}{ax} \PY{o}{=} \PY{n}{d}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{cmap}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{jet}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{crop}\PY{o}{=}\PY{l+m+mf}{2.6}\PY{p}{)}
 \PY{n}{y\PYZus{}min}\PY{p}{,} \PY{n}{y\PYZus{}max} \PY{o}{=} \PY{n}{ax}\PY{o}{.}\PY{n}{get\PYZus{}ylim}\PY{p}{(}\PY{p}{)}
-\PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}ylim}\PY{p}{(}\PY{l+m+mf}{-0.01}\PY{p}{,} \PY{n}{y\PYZus{}max}\PY{p}{)}
+\PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}ylim}\PY{p}{(}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.01}\PY{p}{,} \PY{n}{y\PYZus{}max}\PY{p}{)}\PY{p}{)}
+\PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{set\PYZus{}visible}\PY{p}{(}\PY{k+kc}{False}\PY{p}{)} \PY{k}{for} \PY{n}{l} \PY{o+ow}{in} \PY{n}{ax}\PY{o}{.}\PY{n}{xaxis}\PY{o}{.}\PY{n}{get\PYZus{}ticklabels}\PY{p}{(}\PY{p}{)}\PY{p}{[}\PY{p}{:}\PY{p}{:}\PY{l+m+mi}{2}\PY{p}{]}\PY{p}{]}
+\PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{set\PYZus{}visible}\PY{p}{(}\PY{k+kc}{False}\PY{p}{)} \PY{k}{for} \PY{n}{l} \PY{o+ow}{in} \PY{n}{ax}\PY{o}{.}\PY{n}{yaxis}\PY{o}{.}\PY{n}{get\PYZus{}ticklabels}\PY{p}{(}\PY{p}{)}\PY{p}{[}\PY{p}{:}\PY{p}{:}\PY{l+m+mi}{2}\PY{p}{]}\PY{p}{]}
+
 \PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
