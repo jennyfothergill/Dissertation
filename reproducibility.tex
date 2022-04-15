@@ -144,12 +144,11 @@ In HOOMD water is modelled as a rigid body. It was found that when the neighborl
 Benefits:
 This study provides comprehensive information: the results obtained and the exact code ran to obtain them. These data can be used by other simulators to validate their work.
 
-HOOMD v3 is still in beta, so hoomd part of this project can serve as a valuable example of (1) how to run atomistic simulations consistently with other engines. (2) how to initialize rigid bodies using the MoSDeF framework--this is also the only available example of how to initialize rigid bodies on an existing system. HOOMD has some idiosyncrasies with its handling of rigid bodies: body particles must be first in the snapshot and the bodies must all have the same orientation on initialization. To reduce the cognitive load for users, HOOMD recommends creating the body constituent particles using the create\_bodies function, but this conflicts with using the MoSDeF initialization. (3) rigid bonds, (4) how to log individual energies such that they can be compared to other engines. (5) a full Shrink->NPT->(shrink)->NVT workflow with automated equilibration detection using pymbar.
+HOOMD v3 is still in beta, so HOOMD part of this project can serve as a valuable example of (1) how to run atomistic simulations consistently with other engines. (2) how to initialize rigid bodies using the MoSDeF framework--this is also the only available example of how to initialize rigid bodies on an existing system. HOOMD has some idiosyncrasies with its handling of rigid bodies: body particles must be first in the snapshot and the bodies must all have the same orientation on initialization. To reduce the cognitive load for users, HOOMD recommends creating the body constituent particles using the create\_bodies function, but this conflicts with using the MoSDeF initialization. (3) rigid bonds, (4) how to log individual energies such that they can be compared to other engines. (5) a full Shrink->NPT->(shrink)->NVT workflow with automated equilibration detection using pymbar.
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,height=0.6\paperheight,
-  keepaspectratio]{figures/rep_study/reproducibility_workflow.pdf}
+    \includegraphics[width=\linewidth,keepaspectratio]{figures/rep_study/reproducibility_workflow.png}
     \caption{Workflow for HOOMD simulations in the reproducibility study.}\label{fig:rep_workflow}
 \end{figure}
 The workflow for the HOOMD simulations in shown in \autoref{fig:rep_workflow}. First the statepoint must be defined---this is handled by Signac \cite{Adorf2018, signac_zenodo, signac_scipy_2018, signac_scipy_2021}. The Signac project initialization script assigns all statepoint parameters (molecule, engine, replica, temperature, pressure, ensemble, N, box length, target density, mass, forcefield, cutoff style, long range correction, and $r_{cut}$) to each job. Then using that statepoint data, the system is initialized. To ensure that all engines are starting with the same system, this process is generalized: All engines use the \lstinline{construct_system}, which wraps mBuild's \lstinline{fill_box} to creates an mBuild \lstinline{Compound} object containing the simulation box at the specified density populated with the specified number of molecules, and \lstinline{load_ff}, which loads the correct foyer \lstinline{Forcefield} object from the forcefield name in the statepoint. Then the forcefield is applied to the system box compound to generate a ParmEd structure\cite{Shirts2017}, where the atoms are typed according to the forcefield and and the relevant force parameters are also stored within the structure object. From there each engine takes the parameterized ParmEd structure and converts it to the necessary input format. For HOOMD this is done using the \lstinline{create_hoomd_forcefield} function in mBuild, which handles the unit scaling, initial snapshot creation, and neighborlist and force creation using the information stored in the ParmEd structure. 
@@ -221,7 +220,7 @@ A number of changes and fixes have been initiated by this study, including the f
 A bug was found in the way Ryckaert-Belleman (RB) dihedrals were converted to OPLS-style dihedrals (mbuild PR 996)
 A change in the HOOMD neighborlist API adding the buffer as a required argument prompted a change in the mbuild \lstinline{create_hoomd_forcefield} function. (mbuild PR 988)
 Some engines require more precision in the coordinate written to xyz files, so in order to use mbuild's xyz writing capabilities a precision keyword argument was added. (mbuild PR 948)
-lj lrc hoomd PR 1138
+lj lrc HOOMD PR 1138
 
 double-counting nlist exclusions with rigid bodies
 1-4 exclusions not being properly assigned when alpha is 0
@@ -265,6 +264,123 @@ By using a smaller timestep (0.0005), the temperature equilibrated to the correc
     \caption{The evolution of temperature with time with the larger (1 fs) timestep for the methane-UA system. The set temperature is shown as a dashed line.}\label{fig:temp_evo_methane}
 \end{figure}
 %% why did it appear to equilibrate though?
+
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/methaneUA_summary_bar_2std.pdf}
+    \caption{Average density of methane by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:methane_density}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentaneUA-constrain_bonds_summary_bar_2std.pdf}
+    \caption{Average density of pentane with constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_constrain_density}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentaneUA-flexible_bonds_summary_bar_2std.pdf}
+    \caption{Average density of pentane with flexible bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_flexible_density}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_summary_bar_2std.pdf}
+    \caption{Average density of benzene by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:benzene_density}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_summary_bar_2std.pdf}
+    \caption{Average density of water with constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:water_density}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_summary_bar_2std.pdf}
+    \caption{Average density of ethanol with constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:ethanol_density}
+\end{figure}
+
+MC in general has lower density and greater variability.
+
+Most results agree within error.
+
+pentane flexible vs constrained: MC engines can only run constrained bonds. within the same engine and same system (pentane) have higher density than with the constrained bonds. This may explain the lower density found in MC.
+
+Single point energy breakdown
+
+Methane
+\begin{table}[]
+\begin{tabular}{rccc}
+Engine & Potential & VDW & Tail Correction \\ \hline
+LAMMPS-VU & 5.367E+05 & 5.37E+05 & -1.28E+02 \\
+LAMMPS-UD & 5.369E+05 & 5.37E+05 & -1.19E+02 \\
+MCCCS & 5.367E+05 & 5.37E+05 & -1.28E+02 \\
+HOOMD & 5.368E+05 & 5.37E+05 & -1.19E+02 \\
+GROMACS & 5.368E+05 & 5.37E+05 & -1.19E+02 \\
+GOMC & 5.367E+05 & - & -1.28E+02 \\
+Cassandra & 5.367E+05 & 5.37E+05 & -1.28E+02
+\end{tabular}
+\end{table}
+
+Pentane
+\begin{table}[]
+\begin{tabular}{rcccccc}
+Engine & Potential & VDW & Tail Correction & Bond & Angle & Dihedral \\ \hline
+LAMMPS-VU & 5.377E+05 & 5.38E+05 & -1.81E+02 & 0 & 0 & 0 \\
+LAMMPS-UD & 5.366E+05 & 5.37E+05 & -1.68E+02 & 5.50E-07 & 6.30E-08 & 2.90E-09 \\
+MCCCS & 5.377E+05 & 5.38E+05 & -1.81E+02 & 0 & 0 & 0 \\
+HOOMD & 5.378E+05 & 5.38E+05 & -1.68E+02 & 0 & 0 & 0 \\
+GROMACS & 5.378E+05 & 5.38E+05 & -1.68E+02 & 0 & 0 & 1.00E-02 \\
+GOMC & 5.377E+05 & - & -1.81E+02 & - & - & - \\
+Cassandra & 5.377E+05 & 5.38E+05 & -1.81E+02 & 0 & 6.37E-08 & 2.94E-09
+\end{tabular}
+\end{table}
+
+Benzene
+\begin{table}[]
+\begin{tabular}{rccc}
+Engine & Potential & VDW & Tail Correction \\ \hline
+LAMMPS-VU & 3.889E+05 & 3.89E+05 & -2.51E+02 \\
+LAMMPS-UD & 3.890E+05 & 3.89E+05 & -2.34E+02 \\
+MCCCS & 3.889E+05 & 3.89E+05 & -2.51E+02 \\
+HOOMD & 3.891E+05 & 3.89E+05 & -2.34E+02 \\
+GROMACS & 3.891E+05 & 3.89E+05 & -2.34E+02 \\
+Cassandra & 3.889E+05 & 3.89E+05 & -2.51E+02 \\
+GOMC & 3.889E+05 & - & -2.51E+02
+\end{tabular}
+\end{table}
+
+Water 
+\begin{table}[]
+\begin{tabular}{rcccccccc}
+Engine & Potential & VDW & Tail Correction & Total Electrostatic & Short Range Electrostatic & Long Range Electrostatic & Bond & Angle \\ \hline
+LAMMPS-VU & 5.718E+04 & 7.67E+04 & -2.76E+02 & -1.95E+04 & 2.93E+05 & -3.12E+05 & 0 & 0 \\
+LAMMPS-UD & 5.977E+04 & 7.68E+04 & -2.49E+02 & -1.70E+04 & 2.90E+05 & -3.07E+05 & 0 & 0 \\
+MCCCS & 5.717E+04 & 7.67E+04 & -2.76E+02 & -1.95E+04 & - & - & 0 & 0 \\
+HOOMD & 5.718E+04 & 7.67E+04 & -2.76E+02 & -1.43E+04 & -5.18E+03 & 5.72E+04 & 0 & 0 \\
+GROMACS & 5.977E+04 & 7.68E+04 & -2.50E+02 & -1.70E+04 & -2.37E+04 & 6.64E+03 & 0 & 0 \\
+GOMC & 5.718E+04 & - & -2.76E+02 & - & - & - & - & - \\
+Cassandra & 5.732E+04 & 7.68E+04 & -2.76E+02 & -1.95E+04 & 3.25E+05 & -3.44E+05 & 0 & 7.27E-09
+\end{tabular}
+\end{table}
+
+Ethanol
+\begin{table}[]
+\begin{tabular}{rccccccccc}
+Engine & Potential & VDW & Tail Correction & Total Electrostatic & Short Range Electrostatic & Long Range Electrostatic & Bond & Angle & Dihedral \\ \hline
+LAMMPS-VU & 3.141E+04 & 1.94E+04 & -4.18E+02 & 3.58E+03 & 8.13E+04 & -7.77E+04 & 0 & 7.23E+03 & 1.19E+03 \\
+LAMMPS-UD & 3.153E+04 & 1.96E+04 & -3.83E+02 & 3.55E+03 & 8.06E+04 & -7.71E+04 & 5.96E-05 & 7.23E+03 & 1.19E+03 \\
+MCCCS & 3.141E+04 & 1.94E+04 & -4.18E+02 & 3.58E+03 & - & - & 0 & 7.23E+03 & 1.19E+03 \\
+HOOMD & 3.141E+04 & 1.94E+04 & -4.18E+02 & 2.31E+03 & 1.27E+03 & 2.30E+04 & 7.23E+03 & 1.19E+03 & 8.43E+03 \\
+GROMACS & 3.153E+04 & 1.96E+04 & -3.83E+02 & 3.55E+03 & 1.69E+04 & 1.39E+03 & 0 & 7.23E+03 & 1.19E+03 \\
+GOMC & 3.141E+04 &  & -4.18E+02 & - & - & - & - & - & - \\
+Cassandra & 3.141E+04 & 1.94E+04 & -4.18E+02 & 3.58E+03 & 9.56E+04 & -9.21E+04 & - & 7.23E+03 & 1.19E+03
+\end{tabular}
+\end{table}
+
 
 \section{Conclusions}
 Beyond just an opportunity to validate that our results were "right," working on this project together with other simulators with different backgrounds and expertise was an invaluable opportunity to learn.
