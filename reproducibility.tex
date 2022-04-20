@@ -13,7 +13,7 @@ Reproducibility in science is a crucial issue.
 If the goal of science is to expand the knowledge of humankind, making sure experiments are reproducible helps to lay a strong foundation for the next discovery.
 In computational molecular simulation, where all parameters can be controlled, it would seem an easy task to reproduce an existing work.
 Molecular dynamics (MD) and Monte Carlo (MC) simulation are both driven by the core principles of statistical thermodynamics.
-However, various codes exist each with their own algorithms and implementations, but if they are correctly using the core principles, the end result should be the same.
+Many codes for performing these methods exist each with their own algorithms and implementations, but if each code is correctly using the core principles, the end result should be the same.
 
 This study aims to learn whether different codes can get the same result using the same model.
 Within the umbrella of model is the thermodynamic ensemble (e.g., NVT, NPT), the representation of the system (e.g., the force field, constraints, cut offs), and the statepoint (i.e., the pressure, temperature).
@@ -83,6 +83,10 @@ Finally, the most complex system, the OPLS all-atom (AA) forcefield was applied 
 
 The increasing complexity in these systems was later very useful for determining the source of a discrepancy between engines.
 
+The forcefield parameters for TraPPE-UA and OPLS-AA are provided with Foyer \citep{foyer}. 
+The non-bonded potential parameters for SPC/E water can be found in \autoref{tab:water}. 
+The non-bonded TraPPE-UA potential parameters used for benzene can be found in \autoref{tab:bz_nonbond}. No bonded potentials were used for either water or benzene as both molecules were modelled as a rigid bodies \citep{Nguyen2011a, Glaser2020a}. 
+
 \begin{table}
 \caption{Non-bonded parameters for SPC/E water} \label{tab:water}
 \centering
@@ -94,7 +98,7 @@ HW & 0.0              & 0.0        &  0.4238    &  1.00800   \\
 \end{table}
 
 \begin{table}
-\caption{Non-bonded parameters for TraPPE-UA-like benzene} \label{tab:bz_nonbond}
+\caption{Non-bonded parameters for TraPPE-UA benzene} \label{tab:bz_nonbond}
 \centering
 \begin{tabular}{lccc}
     & epsilon (kJ/mol)  & sigma (nm) & mass (amu) \\ \hline
@@ -102,10 +106,8 @@ CHE & 0.419880362216737 & 0.3695     &  13.01900  \\
 \end{tabular}
 \end{table}
 
-The forcefield parameters for TraPPE-UA and OPLS-AA are provided with Foyer \citep{foyer}. 
-The non-bonded potential parameters for SPC/E water can be found in \autoref{tab:water}. 
-The non-bonded potential parameters for the TraPPE-UA forcefield used for benzene can be found in \ref{tab:bz_nonbond}. No bonded potentials were used for either water or benzene as both molecules were modelled as a rigid bodies \citep{Nguyen2011a, Glaser2020a}. 
-
+As is common in molecular simulation, the Lennard-Jones equation (Equation~\eqref{lj}) was used to model the non-bonded potentials between particles.
+To save computational resources, it is common to truncate the potential at a certain distance, and, as a discontinuity in the potential energy can issues in energy conservation, there exist various smoothing schemes for handling values beyond the cutoff.
 
 \begin{alignat}{3}
 U_{LJ}(r) & = 4\epsilon\bigg[\bigg(\frac{\sigma}{r}\bigg)^{12} - \bigg(\frac{\sigma}{r}\bigg)^{6}\bigg]; && r<r_{cut} 
@@ -114,7 +116,32 @@ U_{LJ}(r) & = 4\epsilon\bigg[\bigg(\frac{\sigma}{r}\bigg)^{12} - \bigg(\frac{\si
     \nonumber
 \end{alignat}
 
-see Equation~\eqref{lj}, \eqref{lrc_p}, \eqref{lrc_e}
+Significant differences in the total energy and density were observed depending on how the non-bonded potential was handled beyond the cutoff value.
+Let us define three cases: hard cutoff, shifted, and long-range correction (LRC). 
+Hard-cutoff means that the potential is simply set to zero beyond $r_{cut}$ with no smoothing regardless of the potential’s value at $r_{cut}$, essentially a step function.
+Shifted means the entire potential is shifted by the potential value at $r_{cut}$ (a constant) such that the potential at $r_{cut}$ is zero.
+Finally, long-range correction means that a correction to the total energy and pressure is applied based on the particle number densities beyond $r_{cut}$.
+Across the engines used in this study, it was found that the only options for handling this cutoff shared between all engines were "shifted" and "hard cutoff".
+
+If a hard cutoff was used, the density did not agree between the MD and MC methods.
+Some MC engines use impulsive contribution to the pressure which is not accounted for in MD and this may have some effect \citep{frenkel2001understanding}.
+However GOMC does not have impulsive correction but has agreement with MC3S. Why do we see consistency between MD? and MC?
+This is due to innate differences in the two methods: MD is using the interparticle forces---the derivative of the potential w.r.t. r---while MC uses the potential values outright.
+Due to the discontinuity in the potential with hard cutoff, the force will be infinite in MD.
+
+When using the shifted cutoff we may see similar discrepancies between the two methods. 
+The potential is no longer discontinuous, but has an inflection point at $r_{cut}$ so the force will be discontinuous but not infinite.
+Shifted cutoff is also not ideal for the force-fields we are using as they were all parameterized with LRC. 
+
+So in order to achieve agreement between methods, we needed to use LRC to energy and pressure. 
+By using the energy-pressure correction, we were able to get agreement between the energies and densities of both methods. 
+Slight differences in the pressures were noted depending on if the ideal gas approximation is used for the pressure calculation.
+Pressure is not matching between engines for the single snapshot of methane. 
+The difference is due to the ideal gas contribution to pressure. 
+Some engines are calculating the pressure at 0K and others at the specified temperature.
+
+In order to test this in HOOMD I needed to write my own tail correction code referencing the formulas in Frenkel and Smit  \citep{frenkel2001understanding} and from eq 5 of  \citep{Sun1998}. see Equation~\eqref{lrc_p}, \eqref{lrc_e}
+This code can be seen at % cite my PR?
 
 In order to correct for the contributions of interactions beyond the cutoff, isotropic integrated long range tail corrections were applied to the Lennard-Jones pair potentials. The pressure and energy corrections $\Delta P$ and $\Delta E$ are given by
 \begin{equation}\label{lrc_p}
@@ -128,10 +155,6 @@ and
     \int_{r_\mathrm{cut}}^{\infty} V_{ij}(r) r^2\,\,\mathrm{d}r, 
 \end{equation}
 where $n$ is the number of unique particle types in the system, $\rho_{i}$ is the number density of particles of type $i$ in the system, $V_{ij}(r)$ is the pair potential between particles of type $i$ and $j$, and $N_{i}$ is the number of particles of type $i$ in the system. These expressions assume that the radial pair distribution functions, $g_{ij}(r)$, are unity at the cutoff and beyond.
-
-%HOOMD handles the 1-4 scaling of non-bonded potentials using a separate force object, so the long range tail correction implemented in the Lennard-Jones potential is not applied to the LJ potential with 1-4 scaling. 
-%This can explain the discrepancy in density seen in ethanolAA, the only model with scaled 1-4 interactions. 
-%(PentaneUA would also have these interactions, but the 1-4 scaling is 0.)
 
 
 Single point energy comparisons
@@ -180,31 +203,7 @@ Keeping consistent units.
 Sharing data.
 and many unexpected hurdles to get consistency between engines due to the different available functions in each engine. % wording?
 
-Significant differences in the total energy and density were observed depending on how the non-bonded potential was handled beyond the cutoff value.
-Let us define three cases: hard cutoff, shifted, and long-range correction (LRC). 
-Hard-cutoff means that the potential is simply set to zero beyond $r_{cut}$ with no smoothing regardless of the potential’s value at $r_{cut}$, essentially a step function.
-Shifted means the entire potential is shifted by the potential value at $r_{cut}$ (a constant) such that the potential at $r_{cut}$ is zero.
-Finally, long-range correction means that a correction to the total energy and pressure is applied based on the particle number densities beyond $r_{cut}$ 
 
-If a hard cutoff was used, the density did not agree between the MD and MC methods.
-Some MC engines use impulsive contribution to the pressure which is not accounted for in MD and this may have some effect \citep{frenkel2001understanding}.
-However GOMC does not have impulsive correction but has agreement with MC3S. Why do we see consistency between MD? and MC?
-This is due to innate differences in the two methods: MD is using the interparticle forces---the derivative of the potential w.r.t. r---while MC uses the potential values outright.
-Due to the discontinuity in the potential with hard cutoff, the force will be infinite in MD.
-
-When using the shifted cutoff we may see similar discrepancies between the two methods. 
-The potential is no longer discontinuous, but has an inflection point at $r_{cut}$ so the force will be discontinuous but not infinite.
-Shifted cutoff is also not ideal for the force-fields we are using as they were all parameterized with LRC. 
-
-So in order to achieve agreement between methods, we needed to use LRC to energy and pressure. 
-By using the energy-pressure correction, we were able to get agreement between the energies and densities of both methods. 
-Slight differences in the pressures were noted depending on if the ideal gas approximation is used for the pressure calculation.
-Pressure is not matching between engines for the single snapshot of methane. 
-The difference is due to the ideal gas contribution to pressure. 
-Some engines are calculating the pressure at 0K and others at the specified temperature.
-
-In order to test this in HOOMD I needed to write my own tail correction code referencing the formulas in Frenkel and Smit  \citep{frenkel2001understanding} and from eq 5 of  \citep{Sun1998}. 
-This code can be seen at % cite my PR?
 
 I also contributed to the code which calculates rigid bodies in HOOMD v3 % cite my PR?
 
@@ -266,41 +265,53 @@ By using a smaller timestep (0.0005), the temperature equilibrated to the correc
 %% why did it appear to equilibrate though?
 
 
+In order to assess the impact of the cut off scheme, a substudy was performed examining the effect of only cutoff on the simplest system, united atom methane. This system is uncharged and contains a single, unbonded particle type, so it only has Lennard-Jones type interactions. When a hard cutoff is used (see \autoref{fig:hard_cutoff}), there is a large discrepancy between the MD engines (GROMACS, LAMMPS, and HOOMD) and the MC engines (GOMC, Cassandra, and MCCCS). 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/hard_cutoff.png}
+    \caption{Average density from NPT simulation of methane using "hard" cutoff by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:hard_cutoff}
+\end{figure}
+When a shifted cutoff is used (see \autoref{fig:shift_cutoff}), all engines equilibrate to the same density within error, but the density is much lower than the predicted value---the density of methane at 140K and 1318kPa should be 0.37808 g/cm$^3$\cite{NISTwebbook}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/shift_cutoff.png}
+    \caption{Average density from NPT simulation of methane using "shifted" cutoff by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:shift_cutoff}
+\end{figure}
+So in order to get agreement between engines and closer to the correct density value, the correction to the energy and pressure was needed (see \autoref{fig:lrc_cutoff}).
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/lrc_cutoff.png}
+    \caption{Average density from NPT simulation of methane using energy and pressure long range correction by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:lrc_cutoff}
+\end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/methaneUA_summary_bar_2std.pdf}
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/methaneUA_summary.png}
     \caption{Average density of methane by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:methane_density}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentaneUA-constrain_bonds_summary_bar_2std.pdf}
-    \caption{Average density of pentane with constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_constrain_density}
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentane_summary.png}
+    \caption{Average density of pentane with flexible or constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_constrain_density}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentaneUA-flexible_bonds_summary_bar_2std.pdf}
-    \caption{Average density of pentane with flexible bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_flexible_density}
-\end{figure}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_summary_bar_2std.pdf}
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_summary.png}
     \caption{Average density of benzene by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:benzene_density}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_summary_bar_2std.pdf}
-    \caption{Average density of water with constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:water_density}
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_summary.png}
+    \caption{Average density of water at three statepoints by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:water_density}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_summary_bar_2std.pdf}
-    \caption{Average density of ethanol with constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:ethanol_density}
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_summary.png}
+    \caption{Average density of ethanol by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:ethanol_density}
 \end{figure}
 
 MC in general has lower density and greater variability.

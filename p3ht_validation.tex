@@ -1,22 +1,28 @@
-\chapter{P3HT Validation}
+\chapter{Validating state space screening calculations, a P3HT case study}
 \label{chap:p3ht_validation}
 
 The following chapter contains unpublished work written by me with guidance from Dr. Jankowski.
 
-\section{Summary}
- 
-A Jupyter notebook demonstrating the tools mentioned in this chapter can be found in \autoref{app:p3ht_nb}, and a zenodo dataset containing all data used in this chapter can be found at \citet{Fothergill2022}.
+%\section{Summary} \ej{Don't need summary here?}
+
+A Jupyter notebook demonstrating the tools mentioned in this chapter can be found in \autoref{app:p3ht_nb}, and a zenodo dataset containing all data used in this chapter can be found at Ref.~\citet{Fothergill2022}.
 
 \section{Introduction}
-This work addresses a materials engineering problem that may contribute to ameliorating global climate change.
-The global climate crisis is the most pressing issue humanity faces today.
-Consumption of fossil fuels for energy and transportation is the primary contributor to rising atmospheric $CO_{2}$ levels \citep{Solomon2009a}.
-Changes in the climate influenced by atmospheric $CO_{2}$ are long-lasting, devastating, and inequitable, often impacting the poorest nations the hardest.
-Global energy consumption is predicted to increase from 19 TW in 2020 to 27 TW in 2040 \citep{Mazzio2015, ieo2020}, so we must look to alternatives to power generation using fossil fuel.
-Solar power represents one way to sustainably meet our energy demands, and the contribution of solar energy generation to the total green energy portfolio has opportunity to increase.
-To persuade corporations to adopt solar power, however, it must be more profitable.
-Despite improvements over the last 40 years, the cost of photovoltaic (PV) devices has prevented solar power from being a large part of the energy generation portfolio.
-In order for solar power to be a viable option, large scale PV technology needs to be more economical and efficient \citep{Mazzio2015, Espinosa2012}.
+An important facet of applying molecular simulations to solve real-world engineering problems is ensuring that the simulations are correct.
+While there exist general guidelines for improving simulation correctness (e.g., the TRUE principles \cite{Thompson2020}), specific instances will vary widely between disciplines because of individual workflows that govern scientific simulation pipelines. 
+In this work we detail the application of TRUE principles for a common problem that arises in molecular simulations: performing molecular simulations across a set of thermodynamic state points to screen these conditions for structures of interest. 
+Specifically, we consider a case study of validating structural predictions of the organic photovoltaic polymer P3HT. 
+
+%OPV intro 
+%This work addresses a materials engineering problem that may contribute to ameliorating global climate change.
+%The global climate crisis is the most pressing issue humanity faces today.
+%Consumption of fossil fuels for energy and transportation is the primary contributor to rising atmospheric $CO_{2}$ levels \citep{Solomon2009a}.
+%Changes in the climate influenced by atmospheric $CO_{2}$ are long-lasting, devastating, and inequitable, often impacting the poorest nations the hardest.
+%Global energy consumption is predicted to increase from 19 TW in 2020 to 27 TW in 2040 \citep{Mazzio2015, ieo2020}, so we must look to alternatives to power generation using fossil fuel.
+%Solar power represents one way to sustainably meet our energy demands, and the contribution of solar energy generation to the total green energy portfolio has opportunity to increase.
+%To persuade corporations to adopt solar power, however, it must be more profitable.
+%Despite improvements over the last 40 years, the cost of photovoltaic (PV) devices has prevented solar power from being a large part of the energy generation portfolio.
+%In order for solar power to be a viable option, large scale PV technology needs to be more economical and efficient \citep{Mazzio2015, Espinosa2012}.
 
 Organic photovoltaics (OPVs) are a focus of this research because they represent the best opportunity for cost-effective solar power.
 The theoretical efficiency limit (Shockley-Queisser limit) for a p-n single junction solar cell is about 30\% \citep{Shockley1961}.
@@ -44,7 +50,7 @@ This chapter will discuss a previous work which laid the groundwork for making t
 
 \section{Background} 
 
-A previous work from our lab, \citet{Miller2018}, performed a hundreds of molecular dynamics simulations of P3HT polymer across different temperatures, densities, and solvent qualities in order to ascertain at which statepoints the morphology would self-assemble into the most ordered structure.
+In previous work from our lab, Ref.~\citet{Miller2018}, hundreds of molecular dynamics simulations of P3HT polymer are performed across different temperatures, densities, and solvent qualities in order to ascertain at which statepoints the morphology would self-assemble into the most ordered structure.
 The temperatures and densities were chosen around the ranges used in experiment.
 In this study the solvent is modelled implicitly, so the solvent quality, $\epsilon_{s}$, refers to a scaling factor on the non bonded forces.
 These hundreds of simulations at different statepoints were organized using custom python scripts which relied on creating and navigating a directory structure.
@@ -202,7 +208,7 @@ There is room for users to choose multiple points within a large, smeary peak su
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/ua_vs_cg_dp.png}
-    \caption{Diffraction patterns of P3HT using (a) all particles in the UA trajectory (b) thiophene centers found using GRiTS. Both patterns were generated using GIXStapose from the simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K.}\label{fig:highorder-dp}
+    \caption{Diffraction patterns of P3HT using (a) all particles in the UA trajectory (b) thiophene centers found using GRiTS. Both patterns were generated using GIXStapose from the simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K.}\label{fig:ua-vs-cg-dp}
 \end{figure}
 
 As \autoref{fig:highorder-dp}c was generated using GIXStapose, we can examine the real space structure from the exact viewing angle the diffraction pattern was generated from. 
@@ -278,7 +284,7 @@ And this workflow is designed to be flexible enough to handle these changes.
 
 %% this doesn't fit
 How have we made this work more TRUE?
-By using mBuild with foyer in PlanckTon to initialize our simulations, we can easily use different input file formats including smiles strings and any foyer forcefield. 
+By using  mBuild with foyer in PlanckTon to initialize our simulations, we can easily use different input file formats including smiles strings and any foyer forcefield. 
 Using GRiTS to select the desired part of the molecule removes any need for manual indexing. This allows us to more easily extend the order parameter calculation to other planar, conjugated molecules like perylene or ITIC.
 By using the Signac framework we can quickly and easily sample the necessary parameter space without needing to manually create or manage directories. 
 We've also implemented semantic versioning in planckton with version tagged docker containers which helps users to get the same code state.
