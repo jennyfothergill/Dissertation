@@ -4,12 +4,14 @@
 The following chapter describes an unpublished collaboration.
 My contribution to this project was the scripts to run the HOOMD simulations, and documentation and organization. 
 A number of changes and fixes have been initiated by this study, including the following which I am responsible for:
-A bug was found in the way Ryckaert-Belleman (RB) dihedrals were converted to OPLS-style dihedrals (mbuild PR 996)
-A change in the HOOMD neighborlist API adding the buffer as a required argument prompted a change in the mbuild \lstinline{create_hoomd_forcefield} function. (mbuild PR 988)
-Some engines require more precision in the coordinate written to xyz files, so in order to use mbuild's xyz writing capabilities a precision keyword argument was added. (mbuild PR 948)
-An correction to Coulomb's constant used in the charge conversion (mBuild PR 1011)
-Port the rigid body api to v3 (HOOMD PR 888)
-add tail correction for lennard jone pair force (HOOMD PR 1138)
+\begin{enumerate}
+    \item Ported the rigid body constraint class from the HOOMD v2 to v3 API. \href{https://github.com/glotzerlab/hoomd-blue/pull/888}{(HOOMD pull request #888)}
+    \item Allow mBuild's xyz writer to write coordinates with greater precision, so MCCCS could use it for this study. \href{https://github.com/mosdef-hub/mbuild/pull/996}{(mBuild pull request #948)}
+    \item Added the required neighborlist buffer argument to the mbuild \lstinline{create_hoomd_forcefield} function to address breaking change in the HOOMD neighborlist API. \href{https://github.com/mosdef-hub/mbuild/pull/988}{(mBuild pull request #988)}
+    \item Fixed a bug in the conversion of Ryckaert-Belleman (RB) to OPLS-style dihedrals. \href{https://github.com/mosdef-hub/mbuild/pull/996}{(mBuild pull request #996)}
+    \item Corrected Coulomb's constant used in the charge conversion for HOOMD writers. \href{https://github.com/mosdef-hub/mbuild/pull/1011}{(mBuild pull request #1011)}
+    \item Add optional calculation of energy and pressure tail correction to the Lennard-Jones pair force. \href{https://github.com/glotzerlab/hoomd-blue/pull/1138}{(HOOMD pull request #1138)}
+\end{enumerate}
 
 \section{Summary}
  
@@ -82,6 +84,7 @@ At the time this study started, HOOMD v3 was still in beta, so the HOOMD part of
 We have learned that even when you control every step of the initialization process, there are still so many additional user-tuned parameters in each engine that guaranteeing reproducibility requires careful thought.
 
 \section{Models}
+
 The systems which are studied are small, simple, and chosen to demonstrate simulation in systems with varied degrees of complexity:
 \begin{figure}[h!]
     \centering
@@ -177,7 +180,7 @@ These errors were fixed by mbuild PR 1004 and 1010.
 Initial comparison of the single point energies also showed large disagreement between the electrostatic energies of water in HOOMD and other engines. 
 In HOOMD water was modelled as a rigid body. 
 When the "rigid" neighborlist exclusion was added on to the default exclusions set by \lstinline{create_hoomd_forcefield} ("bond" and "1-3"), it was found that the exclusions were double counted by the PPPM energy calculation resulting in a large discrepancy in the electrostatic energy. 
-This is now noted in HOOMD's documentation.
+This is now noted in HOOMD's rigid body documentation.
 
 Choosing the correct parameters for the PPPM charge calculation---LAMMPS can set an error tolerance, but HOOMD sets the order and resolution and the error must be tuned using these parameters.
 
@@ -188,36 +191,42 @@ The long range and short range electrostatic energies may not be comparable betw
 
 For the ethanol system a smaller timestep was required.
 When a timestep which was too large but small enough that the system didn't explode (i.e., the velocity update didn't push the particle outside of the simulation box) was used, the kinetic temperature was found to equilibrate to a lower value than was set in the NVT/NPT thermostat.
-Unlike the other systems studied, ethanol has explicit hydrogens with harmonic bonds (water also has explicit hydrogens but it is rigid). 
+Unlike the other systems studied, ethanol has explicit hydrogens with harmonic bonds. 
 Because hydrogen is such a light particle, the oscillations of bonds involving hydrogen are very fast.
+(The SPC/E water system also has explicit hydrogens, but because it is rigid, the hydrogen bonds do not have these fast oscillations.) 
+
+The temperature could not equilibrate to the set temperature because the timestep did not allow adequate sampling of the harmonic bond.
+Consider the following example:
 The period of the harmonic bond is given by
 \begin{equation}\label{eq:harmonic_period}
     T = \frac{2\pi}{\sqrt{\frac{k}{m}}}
 \end{equation}
-where k is the potential constant for that bond given in the forcefield and m is the mass of the particle.
-Initially I was using a timestep of 0.001 (in simulation time units) while the period of the harmonic bond (see \autoref{eq:harmonic_period}) was 0.0118 (in simulation time units). \autoref{fig:harmonic_bond} shows the sensitivity of the harmonic bond sampling for different timesteps.
+where k is the potential constant for the bond given in the forcefield and m is the mass of the particle.
+Initially, I was using a timestep of 0.001 (in simulation time units, ~1 fs) while the period of the harmonic bond (see \autoref{eq:harmonic_period}) was 0.0118 (in simulation time units, ~11 fs). \autoref{fig:harmonic_bond} illustrates the sensitivity of the harmonic bond sampled at different timesteps.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/harmonic_bond.png}
-    \caption{Demonstration of how choosing too large a timestep can lead to poor sampling of the position of atoms in a harmonic bond. Note the divergence from sinusoidal as dt increases.}\label{fig:harmonic_bond}
+    \caption{Demonstration of how choosing too large a timestep can lead to poor sampling of the position of atoms in a harmonic bond. Note the divergence from sinusoidal as dt increases. The dt values and the harmonic bond equation are accurate with the values given for the hydrogen bond.}\label{fig:harmonic_bond}
 \end{figure}
-By using a smaller timestep (0.0005), the temperature equilibrated to the correct value.
+By using a smaller timestep (0.0005 in simulation time units, ~0.5 fs), the temperature equilibrated to the correct value.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/temp_evolution.png}
     \caption{The evolution of temperature with time with the larger (1 fs) and a more reasonable (0.5 fs) timestep for the ethanol-AA system. The set temperature is shown as a dashed line. }\label{fig:temp_evo_ethanol}
 \end{figure}
-\autoref{fig:temp_evo_ethanol} and \autoref{fig:temp_evo_methane} show the sensitivity of the equilibrium temperature to timestep based on system complexity. Both plots are very noisy because they show only the initial 100 ps post-shrink equilibration in the NVT ensemble, however the methane temperature fluctuates around the set value and these fluctuations are small (only a couple of degrees K) and smooth. While the ethanol fluctuations are much larger, and with the larger timestep, the fluctuations are not about the set equilibrium temperature.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/temp_evolution_methane.png}
     \caption{The evolution of temperature with time with the larger (1 fs) timestep for the methane-UA system. The set temperature is shown as a dashed line.}\label{fig:temp_evo_methane}
 \end{figure}
-%% why did it appear to equilibrate though?
+\autoref{fig:temp_evo_ethanol} and \autoref{fig:temp_evo_methane} show the sensitivity of the equilibrium temperature to timestep based on system complexity. 
+Both plots are very noisy because they show only the initial 100 ps post-shrink equilibration in the NVT ensemble, however the methane temperature fluctuates around the set value and these fluctuations are small (only a couple of degrees K) and smooth while the ethanol fluctuations are much larger, and with the larger timestep, the fluctuations are not about the set equilibrium temperature.
+This is due to the increased complexity of the ethanol system requiring finer sampling.
 
 \subsection{Cutoff schemes}\label{sec:cutoff}
 
-In order to correct for the contributions of interactions beyond the cutoff, isotropic integrated long range tail corrections were applied to the Lennard-Jones pair potentials. The pressure and energy corrections $\Delta P$ and $\Delta E$ are given by
+In order to correct for the contributions of interactions beyond the cutoff, isotropic integrated long range tail corrections were applied to the Lennard-Jones pair potentials. 
+The pressure and energy corrections $\Delta P$ and $\Delta E$ are given by
 \begin{equation}\label{lrc_p}
     \Delta P = \frac{-2\pi}{3} \sum_{i=1}^{n} \rho_i \sum_{j=1}^{n} \rho_j
     \int_{r_\mathrm{cut}}^{\infty} \left( r
@@ -228,7 +237,8 @@ and
     \Delta E = 2\pi \sum_{i=1}^{n} N_i \sum_{j=1}^{n} \rho_j
     \int_{r_\mathrm{cut}}^{\infty} V_{ij}(r) r^2\,\,\mathrm{d}r, 
 \end{equation}
-where $n$ is the number of unique particle types in the system, $\rho_{i}$ is the number density of particles of type $i$ in the system, $V_{ij}(r)$ is the pair potential between particles of type $i$ and $j$, and $N_{i}$ is the number of particles of type $i$ in the system. These expressions assume that the radial pair distribution functions, $g_{ij}(r)$, are unity at the cutoff and beyond. code referencing the formulas in Frenkel and Smit \citep{frenkel2001understanding} and from eq 5 of  \citep{Sun1998}. see Equation~\eqref{lrc_p}, \eqref{lrc_e}
+where $n$ is the number of unique particle types in the system, $\rho_{i}$ is the number density of particles of type $i$ in the system, $V_{ij}(r)$ is the pair potential between particles of type $i$ and $j$, and $N_{i}$ is the number of particles of type $i$ in the system \citep{frenkel2001understanding, Sun1998}.
+These expressions assume that the radial pair distribution functions, $g_{ij}(r)$, are unity at the cutoff and beyond. 
 
 If a hard cutoff was used, the density did not agree between the MD and MC methods.
 Some MC engines use impulsive contribution to the pressure which is not accounted for in MD and this may have some effect \citep{frenkel2001understanding}.
@@ -273,7 +283,7 @@ HOOMD has some idiosyncrasies with its handling of rigid bodies: body particles 
 \section{Results} 
 
 %% here we'll want to show off the <PE> and <Density> values before and after your software fixes and maybe point to particular commits/PRs.
-analysis metrics: energy, density, RDF, MSD
+%analysis metrics: energy, density, RDF, MSD
 
 \begin{figure}[h!]
     \centering
@@ -305,7 +315,7 @@ analysis metrics: energy, density, RDF, MSD
     \caption{Average density of ethanol by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:ethanol_density}
 \end{figure}
 
-MC in general has lower density and greater variability.
+MC in general has lower density and greater variability. Flexible vs constrained bonds.
 
 Most results agree within error.
 
@@ -313,5 +323,6 @@ pentane flexible vs constrained: MC engines can only run constrained bonds. with
 
 
 \section{Conclusions}
+
 Beyond just an opportunity to validate that our results were "right," working on this project together with other simulators with different backgrounds and expertise was an invaluable opportunity to learn.
 
