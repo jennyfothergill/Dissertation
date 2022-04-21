@@ -5,6 +5,7 @@ The following chapter describes an unpublished collaboration.
 My contribution to this project was the scripts to run the HOOMD simulations, and documentation and organization. 
 A number of changes and fixes have been initiated by this study, including the following which I am responsible for:
 \begin{enumerate}
+    \item Allow HOOMD functions to add to an existing snapshot to facilitate rigid bodies. \href{https://github.com/mosdef-hub/mbuild/pull/808}{(mBuild pull request \#808)}
     \item Ported the rigid body constraint class from the HOOMD v2 to v3 API. \href{https://github.com/glotzerlab/hoomd-blue/pull/888}{(HOOMD pull request \#888)}
     \item Allow mBuild's xyz writer to write coordinates with greater precision, so MCCCS could use it for this study. \href{https://github.com/mosdef-hub/mbuild/pull/996}{(mBuild pull request \#948)}
     \item Added the required neighborlist buffer argument to the mbuild \lstinline{create_hoomd_forcefield} function to address breaking change in the HOOMD neighborlist API. \href{https://github.com/mosdef-hub/mbuild/pull/988}{(mBuild pull request \#988)}
@@ -264,20 +265,64 @@ In order to get agreement between engines and closer to the correct density valu
     \caption{Average density from NPT simulation of methane using energy and pressure long range correction by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:lrc_cutoff}
 \end{figure}
 By using the energy-pressure correction, we were able to get agreement between the energies and densities of both methods. 
-Slight differences in the pressures were noted depending on if the ideal gas approximation is used for the pressure calculation.
-Pressure is not matching between engines for the single snapshot of methane. 
-The difference is due to the ideal gas contribution to pressure. 
-Some engines are calculating the pressure at 0K and others at the specified temperature.
+
+It is worth noting that differences in the computed pressure exist between engines regardless of cutoff scheme, see \autoref{fig:lrc_pressure}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/lrc_pressure.png}
+    \caption{Instantaneous pressure from first frame of methane by engine comparing "hard" and "LRC" cutoff schemes.}\label{fig:lrc_pressure}
+\end{figure}
+These discrepancies in pressure are most likely due to the ideal gas contribution to pressure. 
+The pressure in molecular simulation can be computed by the following equation
+\begin{equation}\label{eq:pressure}
+    P = \frac{N k_{B} T}{V} + \frac{\sum_{i}^{N^{'}} r_{i} \cdot f_{i}}{dV}
+\end{equation}
+where $N$ is the number of atoms, $k_{B}$ is Boltzmann's constant, $T$ is the temperature, $d$ is the dimensionality of the system, $V$ is the system volume, and $r_i$ and $f_i$ are the position and force vectors of atom $i$ \citep{Thompson2009}.
+This first term is the ideal gas contribution to pressure.
+%% when I calculate what this difference should be given the parameters of the simulation though, it does not make sense:
+
+%N = 900
+%kB = 8.314462618e-3 * u.kJ/(u.K*u.mol)
+%T = 140 * u.K
+%V = (3.998 * u.nm)**3
+%N*kB*T/V
+% unyt_quantity(16.3936765, 'kJ/(mol*nm**3)')
+
+% the difference in pressures is more like 100 kJ/(mol nm^3)...
+Through examination of the energy values of this first frame we also found a discrepancy in the energies reported by older version of GROMACS, see \autoref{fig:lrc_energy}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/lrc_energy.png}
+    \caption{Instantaneous energies from first frame of methane by engine comparing "hard" and "LRC" cutoff schemes.}\label{fig:lrc_energy}
+\end{figure}
+This should not have an effect on the end result, but it worth noting for those who may want to compare instantaneous energies:
+Older versions of GROMACS do not include the pressure correction to energy in the total potential energy when running an energy minimization step. 
+This is documented in \href{https://gitlab.com/gromacs/gromacs/-/issues/4229}{GROMACS Issue 4229}.
 
 \subsection{Rigid constraints}
 
-I also contributed to the code which calculates rigid bodies in HOOMD v3 % cite my PR?
-HOOMD has some idiosyncrasies with its handling of rigid bodies: body particles must be first in the snapshot and the bodies must all have the same orientation on initialization. To reduce the cognitive load for users, HOOMD recommends creating the body constituent particles using the create\_bodies function, but this conflicts with using the MoSDeF initialization.
+Benzene and water are modelled as rigid bodies in this study.
+In HOOMD, rigid bodies consist of a central body particle and and its constituent particles. 
+All of these particles can have forces acting upon them, but the mass and moment of the body particle is set to be the full mass and moment of inertia of the body plus its constituents.  
+Further description of how the rigid constraint forces are implemented can be found in \citet{Nguyen2011a} and \citet{Glaser2020a}, and I contributed to updating the rigid body constraint to the v3 api.
+
+Initializing rigid bodies in HOOMD using MoSDeF tools required additional effort, as there are some idiosyncrasies that conflict with the typical workflow.
+In order to initialize a rigid body in HOOMD, all the body particles must be first in the snapshot and the constituent particles must all have the same relative orientation to the body particle. 
+To reduce the cognitive load for users, HOOMD recommends creating the body constituent particles using the \lstinline{create_bodies} function, but this precludes using the MoSDeF initialization functions which fill the simulation volume, apply the forcefield, and initialize the HOOMD forces.
+Therefore, we have developed a generalized workflow based on the assumption that each molecule is the same and will be its own rigid body.
+First, an initial snapshot is created with the same number of body particle as molecules.
+Using a functionality which I contributed to the \lstinline{create_hoomd_forcefield}, this initial snapshot can be passed in and the normal workflow---filling the box with all molecules in the same orientation and applying the forces---can add on to this initial snapshot. 
+Next, the number of molecules and the number of particles in each molecule is used index through the snapshot to set the body ids for each constituent particle and to calculate and set the position, mass, and moment of inertia tensor for each body particle.
+Finally, the body constraint is defined based on the types, charges, diameters, and relative positions and orientations, of the first molecule.
+
+Before using rigid bodies for water and benzene, the HOOMD simulations were taking an excessive amount of time to equilibrate and were equilibrating to vastly different results as other engines.
+There was some hesitation to use rigid bodies because it was a function that was not supported or implemented differently in other engines.
+However \autoref{fig:benzene_density} and \autoref{fig:water_density} suggest that the rigid models achieve agreement.
+
+Currently the example for initializing rigid bodies in the HOOMD v3 API is still under development.
+This workflow can serve as an example of how run simulations of rigid bodies in HOOMD using MoSDeF tools.
 
 \section{Results} 
-
-%% here we'll want to show off the <PE> and <Density> values before and after your software fixes and maybe point to particular commits/PRs.
-%analysis metrics: energy, density, RDF, MSD
 
 \begin{figure}[h!]
     \centering
@@ -288,7 +333,7 @@ HOOMD has some idiosyncrasies with its handling of rigid bodies: body particles 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentane_summary.png}
-    \caption{Average density of pentane with flexible or constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_constrain_density}
+    \caption{Average density of pentane with flexible or constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_density}
 \end{figure}
 
 \begin{figure}[h!]
@@ -314,6 +359,41 @@ MC in general has lower density and greater variability. Flexible vs constrained
 Most results agree within error.
 
 pentane flexible vs constrained: MC engines can only run constrained bonds. within the same engine and same system (pentane) have higher density than with the constrained bonds. This may explain the lower density found in MC.
+
+
+The potential energy between engines agree within error for methane \autoref{fig:methane_pe}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/methaneUA_pe_summary.png}
+    \caption{Average potential energy of methane by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:methane_pe}
+\end{figure}
+And when we look at pentane \autoref{fig:pentane_pe} we can see a hint why the potential energies differ for other systems. 
+The bond lengths for all systems are fixed at their equilibrium length in the MC engines, whereas in the MD engines, the bond length is allowed to deviate. 
+When the MD engines use constrained bonds, the potential energy values are closer to those in MC. (This comparison is shown in \autoref{fig:pentane_pe}, but  \autoref{fig:water_pe} and \autoref{fig:benzene_pe} also are rigid models or have fixed bonds.)
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentane_pe_summary.png}
+    \caption{Average potential energy of pentane by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_pe}
+\end{figure}
+
+I'm not sure what is causing the difference in MCCCS.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_pe_summary.png}
+    \caption{Average potential energy of benzene by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:benzene_pe}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_pe_summary.png}
+    \caption{Average potential energy of water by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:water_pe}
+\end{figure}
+I also don't know why LAMMPS is systematically lower PE in the charged systems (water and ethanol).
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_pe_summary.png}
+    \caption{Average potential energy of ethanol by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:ethanol_pe}
+\end{figure}
 
 \section{Conclusions}
 
