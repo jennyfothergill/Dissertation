@@ -6,6 +6,8 @@
 %---------------------------------------------
 
 
+
+\section{Forcefield parameters}
 \begin{table}
 \caption{Non-bonded parameters for SPC/E water} \label{tab:water}
 \centering
@@ -25,6 +27,20 @@ CHE & 0.419880362216737 & 0.3695     &  13.01900  \\ \hline
 \end{tabular}
 \end{table}
 
+\section{Potential energy plots}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/methane_pe.png}
+    \caption{Potential energy over time for methaneUA NVT ensemble.}\label{fig:methane_pe_evolution}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/ethanol_pe.png}
+    \caption{Potential energy over time for ethanolAA NVT ensemble.}\label{fig:ethanol_pe_evolution}
+\end{figure}
+
+\section{Single-point Energies}
 
 \begin{table}
 \caption{Single-point energy breakdown for methaneUA}\label{tab:sp_methane}
@@ -105,4 +121,3 @@ Cassandra & 3.141E+04 & 1.94E+04 & -4.18E+02 & 3.58E+03 & 9.56E+04 & -9.21E+04 &
 \multicolumn{4}{l}{\small *The discrepancies seen in LAMMPS-UD and GROMACS are most likely due to a different size simulation box.}
 \end{tabular}
 \end{table}
-
