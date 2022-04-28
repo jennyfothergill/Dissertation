@@ -2,8 +2,8 @@
 \label{chap:reproducibility}
 
 The following chapter describes an unpublished collaboration.
-My contribution to this project was the scripts to run the HOOMD simulations, and documentation and organization. 
-A number of changes and fixes have been initiated by this study, including the following which I am responsible for:
+My contribution to this project was preparing the scripts to run the HOOMD simulations, writing documentation for the project, and involvement in numerous group discussions. 
+Scientific software improvements I am responsible for as a result of this study include:
 \begin{enumerate}
     \item Allow HOOMD functions to add to an existing snapshot to facilitate rigid bodies. \href{https://github.com/mosdef-hub/mbuild/pull/808}{(mBuild pull request \#808)}
     \item Ported the rigid body constraint class from the HOOMD v2 to v3 API. \href{https://github.com/glotzerlab/hoomd-blue/pull/888}{(HOOMD pull request \#888)}
@@ -14,13 +14,9 @@ A number of changes and fixes have been initiated by this study, including the f
     \item Add optional calculation of energy and pressure tail correction to the Lennard-Jones pair force. \href{https://github.com/glotzerlab/hoomd-blue/pull/1138}{(HOOMD pull request \#1138)}
 \end{enumerate}
 
-\section{Summary}
- 
-This is an example of a Chapter. 
-
 \section{Introduction}
 %% background
-Reproducibility in science is a crucial issue.
+Reproducibility in science means that we are transparent about our methods in a way that allows others to understand what was done.
 If the goal of science is to expand the knowledge of humankind, making sure experiments are reproducible helps to lay a strong foundation for the next discovery.
 In computational molecular simulation, where all parameters can be controlled, it would seem an easy task to reproduce an existing work.
 Molecular dynamics (MD) and Monte Carlo (MC) simulation are both driven by the core principles of statistical thermodynamics.
@@ -105,42 +101,45 @@ The non-bonded TraPPE-UA potential parameters used for benzene can be found in \
 
 \section{Methods}
 
+The scope of this project meant that it required thoughtful organization: A total of sixty-nine statepoints each in sixteen replicates were distributed to eight different universities.
+Devising a custom organization scheme would've been time-consuming and potentially unreliable, so the parameter space was handled by the Signac framework\cite{Adorf2018, signac_zenodo, signac_scipy_2018, signac_scipy_2021}.
+Signac is a tool designed for managing dynamic data spaces in a well-defined, indexable way.
+The study is formatted as a Signac project, so all code---from system initialization to project analysis for all engines---is contained in a single repository, and access to the data, or "job", can be done using the statepoint parameters.
+
+The workflow for the HOOMD simulations in shown in \autoref{fig:rep_workflow}; each engine will have similar although perhaps not identical workflows.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=\linewidth,keepaspectratio]{figures/rep_study/reproducibility_workflow.png}
     \caption{Workflow for HOOMD simulations in the reproducibility study.}\label{fig:rep_workflow}
 \end{figure}
-The workflow for the HOOMD simulations in shown in \autoref{fig:rep_workflow}. 
-First the statepoint must be defined---this is handled by Signac \cite{Adorf2018, signac_zenodo, signac_scipy_2018, signac_scipy_2021}. 
-The study is formatted as a Signac project, so all code---from system initialization to project analysis for all engines---is contained in a single repository.
-The Signac project initialization script assigns all statepoint parameters (molecule, engine, temperature, pressure, ensemble, N, box length, target density, mass, forcefield, cutoff style, and $r_{cut}$) to each job. 
+First the statepoint data is used to define the job: The statepoint definition consists of the molecule being simulated, the temperature and pressure at which the simulation is run, the simulation ensemble, the number of molecules (N), the side length of the cubic box, the target density, the molecule mass, the forcefield, including the cutoff style and cutoff distance ($r_{cut}$, and the engine used to simulate that statepoint. 
 To provide adequate data for statistical analysis, 16 replicates were run at each statepoint.
 Then using the statepoint data, the system (including the starting structure, box, etc) is initialized programmatically.
 To ensure that all engines are starting with the same system, this process is generalized: All engines use the \lstinline{construct_system}, which wraps mBuild's \lstinline{fill_box} to creates an mBuild \lstinline{Compound} object containing the simulation box at the specified density populated with the specified number of molecules, and \lstinline{load_ff}, which loads the correct foyer \lstinline{Forcefield} object from the forcefield name in the statepoint. 
 Then the forcefield is applied to the system box compound to generate a ParmEd structure\cite{Shirts2017}, where the atoms are typed according to the forcefield and and the relevant force parameters are also stored within the structure object. 
 From there each engine takes the parameterized ParmEd structure and converts it to the necessary input format. 
-
 For HOOMD this is done using the \lstinline{create_hoomd_forcefield} function in mBuild, which handles the unit scaling, initial snapshot creation, and neighborlist and force creation using the information stored in the ParmEd structure. 
 Some adjustments are made to the snapshot and forcefield after this to handle rigid bodies, constrained bonds, neighborlist exclusions, and long range correction. 
 The the simulation is initialized, the integrators, methods, and logging are set and the simulation can be run. 
 The first run step in this process is to run a brief shrink step to bring the system to the desired density. 
 The shrink step starts with the volume expanded by 8 times (each length of the target box is 2 times larger) then the box is shrunk in the NVT ensemble over 100 ps with a thermostat coupling value of 1 ps at the simulation temperature. 
 The NPT run is initialized from the final frame of the shrink trajectory and is run at high thermostat (1 ps) and barostat (5 ps) coupling values initially (for the first 1 ns) to prevent large fluctuations in the pressure and kinetic temperature and then they are lowered (to 0.1 ps and 1 ps, respectively) for the duration of the run. %(Initial tau=1000dt tauS=5000dt for 1e6 steps then tauS=1000dt tau=100dt for 5e6 steps.) 
-
 The NPT ensemble is run for a minimum of 6 ns, but after each NPT run, pymbar's \lstinline{detectEquilibration} and \lstinline{subsampleCorrelatedData} functions are used to check whether the volume has equilibrated and the desired number of decorrelated samples have been run \cite{Chodera2007, Chodera2016, Shirts2008a}. 
-This equilibration detection and subsampling is applied across all engines.
+A minimum of 100 independent samples at equilibrium were collected for each run, and this equilibration detection and subsampling is applied across all engines.
 By using a quantitative metric to achieve the same number of equilibrated, decorrelated samples, as opposed to deciding whether a simulation is equilibrated by eye or running for an arbitrary time, we aim to reduce user error in our sampling.
-(Plots of the evolution of potential energy over time for the simplest (UA methane) and the most complex system (AA ethanol) can be found in \autoref{fig:methane_pe_evolution} and  \autoref{fig:ethanol_pe_evolution}.)
-% transition?
-If the volume has not equilibrated, then the NPT simulation continues at the lower thermostat and barostat coupling values for an additional 5 ns. 
+(Plots of the evolution of potential energy over time for the simplest (UA methane) and the most complex system (AA ethanol) can be found in \autoref{fig:methane_pe_evolution} and \autoref{fig:ethanol_pe_evolution}.)
+If the volume has not equilibrated or the minimum number of independent samples have not been run, then the NPT simulation continues at the lower thermostat and barostat coupling values for an additional 5 ns. 
 If the volume has equilibrated, then the statistically independent samples of the equilibrated volume are averaged and this average is logged to the job document and the job moves to the NVT run. 
 The NVT run is initialized from the final frame of the NPT trajectory, but because this final frame may not be at the average volume, a short (20 ps) shrink period is done for the initial NVT run and then the simulation is run for 5 ns. 
 After the NVT run, the same equilibration detection is used---this time looking at the potential energy values. If the potential energy is equilibrated, the NVT run is finished, otherwise it is run again for an additional 5 ns from the last frame of the proceeding NVT run. 
-Finally the log file written out by HOOMD is processed to remove any extra headers within the data from restarted jobs, the pressure and temperature are converted from simulation units into kPa and K, and the density values are calculated from the volume and logged.
+Finally the log file containing thermodynamic information written out by HOOMD is processed to remove any extra headers within the data from restarted jobs, the pressure and temperature are converted from simulation units into kPa and K, and the density values are calculated from the volume and logged.
+For each engine, the final step is to convert its log and trajectory files to a standard format and unit to allow analysis to run over all jobs.
 
-These scripts are publicly available on GitHub \citep{reproducibility}.
-The resulting output from all simulation engines is then converted to a standard format and unit system so that analysis can be done across simulation engines.
-This data is then uploaded to a shared Dropbox folder using Rclone and once finalized the complete data will be distributed using Zenodo.
+All scripts used to initialize, simulate, and analyze this project are publicly available on GitHub \citep{reproducibility}.
+To share the large data workspace between universities, the workspace folder is uploaded to a shared Dropbox using Rclone. 
+Once the study is finalized the complete data will be distributed using Zenodo.
+Along the way to achieving consensus between engines in this main project, many stumbling blocks were encountered. 
+The following sections will detail the issues we encountered and their resolution.
 
 \section{Single point energy comparisons}
 
@@ -169,10 +168,10 @@ Comparison of the single point energy calculations also helped to tune the grid 
 
 The single point energy values after applying the fixes discussed are included in \autoref{tab:sp_methane}-\autoref{tab:sp_ethanol}, and in general these values were found to agree with some noted discrepancies:
 Some engines are not able to report as thorough of a breakdown for energies or they may partition the energies differently.
-For example, the long range and short range electrostatic energies do not agree between any engines; however, the total electrostatic energy is comparable.
+For example, the long range and short range electrostatic energies are not the same between any engines; however, the total electrostatic energy is comparable.
 By first validating our method using comparison of the single point energies, we were able to move into more complex simulations with greater confidence.
 
-\section{Choosing a timestep}
+\section{Sensitivity of model to timestep}
 
 Designing a general simulation workflow to work with the range of systems in this study required some model specific adjustments.
 For example, the atomistic ethanol system required a smaller timestep.
@@ -191,18 +190,18 @@ where k is the potential constant for the bond given in the forcefield and m is 
 Initially, I was using a timestep of 0.001 (in simulation time units, ~1 fs) while the period of the harmonic bond (see \autoref{eq:harmonic_period}) was 0.0118 (in simulation time units, ~11 fs). \autoref{fig:harmonic_bond} illustrates the sensitivity of the harmonic bond sampled at different timesteps.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/harmonic_bond.png}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/harmonic_bond.png}
     \caption{Demonstration of how choosing too large a timestep can lead to poor sampling of the position of atoms in a harmonic bond. Note the divergence from sinusoidal as dt increases. The dt values and the harmonic bond equation are accurate with the values given for the hydrogen bond.}\label{fig:harmonic_bond}
 \end{figure}
 By using a smaller timestep (0.0005 in simulation time units, ~0.5 fs), the temperature equilibrated to the correct value.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/temp_evolution.png}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/temp_evolution.png}
     \caption{The evolution of temperature with time with the larger (1 fs) and a more reasonable (0.5 fs) timestep for the ethanol-AA system. The set temperature is shown as a dashed line. }\label{fig:temp_evo_ethanol}
 \end{figure}
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/temp_evolution_methane.png}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/temp_evolution_methane.png}
     \caption{The evolution of temperature with time with the larger (1 fs) timestep for the methane-UA system. The set temperature is shown as a dashed line.}\label{fig:temp_evo_methane}
 \end{figure}
 \autoref{fig:temp_evo_ethanol} and \autoref{fig:temp_evo_methane} show the sensitivity of the equilibrium temperature to timestep based on system complexity. 
@@ -241,7 +240,7 @@ where $n$ is the number of unique particle types in the system, $\rho_{i}$ is th
 These expressions assume that the radial pair distribution functions, $g_{ij}(r)$, are unity at the cutoff and beyond. 
 
 At the time this study was initiated, the only options for handling the cutoff shared between all engines were the "shifted" and "hard" schemes.
-It was found that neither cutoff scheme was adequate for equilibrating to the correct density or agreement between MD and MC.
+It was found that neither cutoff scheme was adequate for equilibrating to the correct density or reaching agreement between MD and MC.
 So in order to use the "LRC" scheme in HOOMD, I contributed the tail correction calculations for the LJ pair object which adds a correction to energy and pressure according to \autoref{lrc_e} and \autoref{lrc_p}.
 The tail correction code was included in the HOOMD v3.0.0 release.
 
@@ -250,35 +249,35 @@ In order to assess the impact of the cutoff scheme used to handle potential valu
 When a hard cutoff is used (see \autoref{fig:hard_cutoff}), there is a large discrepancy between the MD engines (GROMACS, LAMMPS, and HOOMD) and the MC engines (GOMC, Cassandra, and MCCCS). 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/hard_cutoff.png}
-    \caption{Average density from NPT simulation of methane using "hard" cutoff by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:hard_cutoff}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/hard_cutoff.png}
+    \caption{Average density from NPT simulation of methane using "hard" cutoff by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:hard_cutoff}
 \end{figure}
 % Some MC engines use an impulsive contribution to the pressure which is not accounted for in MD and this may have some effect \citep{frenkel2001understanding}.
-The disagreement in densities between MC and MD when using the hard cutoff scheme is most likely due to innate differences in the two methods: MD calculates the interparticle forces---the derivative of the potential with respect to r---and uses these forces to update the particle velocities and, in turn, positions. MC, however, calculates the potential values outright and uses the change in potential to choose whether to accept or reject a particular move.
+The variation in densities between MC and MD when using the hard cutoff scheme is most likely due to innate differences in the two methods: MD calculates the interparticle forces---the derivative of the potential with respect to r---and uses these forces to update the particle velocities and, in turn, positions. MC, however, calculates the potential values outright and uses the change in potential to choose whether to accept or reject a particular move.
 Using a hard cutoff would cause a discontinuity in the potential, which results in how the force is handled near the cutoff to be ill-defined.
 
-When a shifted cutoff is used (see \autoref{fig:shift_cutoff}), all engines equilibrate to the same density within error, but the density is much lower than the predicted value---the density of methane at 140K and 1318kPa should be 0.37808 g/cm$^3$\cite{NISTwebbook}.
+When a shifted cutoff is used (see \autoref{fig:shift_cutoff}), all engines equilibrate to the same density within error, but the density is much lower than the predicted value---the density of methane at 140K and 1318kPa is predicted to be 0.37808 g/cm$^3$\cite{NISTwebbook}.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/shift_cutoff.png}
-    \caption{Average density from NPT simulation of methane using "shifted" cutoff by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:shift_cutoff}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/shift_cutoff.png}
+    \caption{Average density from NPT simulation of methane using "shifted" cutoff by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:shift_cutoff}
 \end{figure}
 This deviation from the correct density is due to the absolute values of the potential being shifted. 
 Therefore the potential is different than it was originally created and parameterized, so it may yield different results.
 (The TraPPE-UA forcefield, for example, was designed to be used with analytical tail corrections as described in Equations~\eqref{lrc_e} and \eqref{lrc_p}.)
 
-In order to get agreement between engines and closer to the correct density value, the correction to the energy and pressure was needed (see \autoref{fig:lrc_cutoff}).
+In order to get consensus between engines and closer to the correct density value, the correction to the energy and pressure was needed (see \autoref{fig:lrc_cutoff}).
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/lrc_cutoff.png}
-    \caption{Average density from NPT simulation of methane using energy and pressure long range correction by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:lrc_cutoff}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/lrc_cutoff.png}
+    \caption{Average density from NPT simulation of methane using energy and pressure long range correction by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:lrc_cutoff}
 \end{figure}
-By using the energy-pressure correction, we were able to get agreement between the energies and densities of both methods. 
+By using the energy-pressure correction, the energies and densities of both MD and MC are within the error tolerance of two standard deviations. 
 
 It is worth noting that differences in the computed pressure exist between engines regardless of cutoff scheme, see \autoref{fig:lrc_pressure}.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/lrc_pressure.png}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/lrc_pressure.png}
     \caption{Instantaneous pressure from first frame of methane by engine comparing "hard" and "LRC" cutoff schemes.}\label{fig:lrc_pressure}
 \end{figure}
 These discrepancies in pressure may be due to the ideal gas contribution to pressure. 
@@ -295,7 +294,7 @@ However, calculating the pressure difference due to the ideal gas contribution f
 Through examination of the energy values of this first frame we also found a discrepancy in the energies reported in newer versions of GROMACS, see \autoref{fig:lrc_energy}.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/lrc_energy.png}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/lrc_energy.png}
     \caption{Instantaneous energies from first frame of methane by engine comparing "hard" and "LRC" cutoff schemes.}\label{fig:lrc_energy}
 \end{figure}
 This should not have an effect on the end result, but it worth noting for those who may want to compare instantaneous energies:
@@ -304,14 +303,14 @@ This is documented in \href{https://gitlab.com/gromacs/gromacs/-/issues/4229}{GR
 
 Although it may seem of little significance, the choice of where the cutoff is set and how the cutoff is handled can greatly affect the simulation outcome.
 
-\subsection{Rigid Constraints}
+\subsection{Rigid constraints}
 
 Benzene and water are modelled as rigid bodies in this study.
 In HOOMD, rigid bodies consist of a central body particle and and its constituent particles. 
 All of these particles can have forces acting upon them, but the mass and moment of the body particle is set to be the full mass and moment of inertia of the body plus its constituents.  
 Further description of how the rigid constraint forces are implemented can be found in \citet{Nguyen2011a} and \citet{Glaser2020a}, and I contributed to updating the rigid body constraint to the v3 api.
-Although the implementation of rigid bodies is fairly straightforward in HOOMD, using rigid bodies with MoSDeF tools introduced additional hurdles. 
-The difficulties which arise at the intersection between codebases are those with which many simulators are familiar.
+HOOMD provides functions to simplify the initialization of rigid bodies; however, using these rigid body functions with MoSDeF tools introduced additional hurdles. 
+The difficulties which arise at the intersection between codebases are those with which many simulators will be familiar.
 
 Initializing rigid bodies in HOOMD using MoSDeF tools required additional effort, as there are some idiosyncrasies that conflict with the typical workflow.
 In order to initialize a rigid body in HOOMD, all the body particles must be first in the snapshot and the constituent particles must all have the same relative orientation to the body particle. 
@@ -333,23 +332,23 @@ This workflow can serve as an example of how run simulations of rigid bodies in 
 
 This study is still underway and data is still being collected, however we will examine the current results of this study up to this point, namely the densities and potential energies.
 First let's start with the simplest system, UA methane.
-The density of methane between engines agrees within error \autoref{fig:methane_density}.
+The density of methane between engines agrees within error (see \autoref{fig:methane_density}).
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/methaneUA_summary.png}
-    \caption{Average density of methane by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:methane_density}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/methaneUA_summary.png}
+    \caption{Average density of methane by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:methane_density}
 \end{figure}
-The variation seen in the MC data is higher due to the randomness of the MC moves resulting in more varied configurations, while the configurations in MD are more connected by their step-wise dynamics. 
+The MC density and potential energy data shows higher variation than the MD results. %due to the randomness of the MC moves resulting in more varied configurations, while the configurations in MD are more connected by their dynamics. 
 It appears that the MC engines in general equilibrate to a lower density, perhaps because they can more easily sample high density configurations using unphysical moves (e.g., moving through objects, etc).
 In contrast, MD may be more restricted by dynamics and must follow a physical path to reach a configuration, which could make getting to these high density configurations more difficult.
 The predicted density of methane at 140 K and 1318 kPa should be around 0.37808 g/cm$^3$ \cite{NISTwebbook}.
 We can see that the MD engines, which get closer to the predicted density, have a lower potential energy \autoref{fig:methane_pe}.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/methaneUA_pe_summary.png}
-    \caption{Average potential energy of methane by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:methane_pe}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/methaneUA_pe_summary.png}
+    \caption{Average potential energy of methane by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:methane_pe}
 \end{figure}
-This makes sense: the distances between methane particles are likely on average closer to the equilibrium distance, which would result in a density closer to the predicted and a lower potential energy.
+%This makes sense: the distances between methane particles are likely on average closer to the equilibrium distance, which would result in a density closer to the predicted and a lower potential energy.
 Although there are some differences we can see here between MD and MC, the potential energies of methane also agree between engines within error.
 
 Next, let's examine UA pentane, which adds bond, angle, and dihedral forces. 
@@ -359,20 +358,20 @@ Therefore, by modelling a single system in each way (for the engines which are a
 \autoref{fig:pentane_density} shows the densities of pentane with flexible and fixed bonds by engine.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentane_summary.png}
-    \caption{Average density of pentane with flexible or constrained bonds by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_density}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/pentane_summary.png}
+    \caption{Average density of pentane with flexible or constrained bonds by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:pentane_density}
 \end{figure}
 I do not yet have data for constrained bond from LAMMPS, and so the only engines we can compare at this point are GROMACS and HOOMD.
 Both engines seem to have greater variability in the density when using flexible bonds. 
 This seems reasonable: allowing the bond lengths to fluctuate essentially allows the volume the molecule occupies to also fluctuate, so in order to keep the intermolecular forces consistent, the box volume must also fluctuate.
 The HOOMD flexible and constrained bond pentane densities appear to agree within error although the density of the flexible bond pentane is higher.
-For the GROMACS densities, however, the flexible pentane is much lower density and not within error of the constrained bond model.
+For the GROMACS, however, the flexible pentane is much lower density and not within error of the constrained bond model.
 Further investigation into the cause of this will be required.
 The differences between the potential energy of the flexible and constrained bond pentane (see \autoref{fig:pentane_pe}) are much more clear.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/pentane_pe_summary.png}
-    \caption{Average potential energy of pentane by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:pentane_pe}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/pentane_pe_summary.png}
+    \caption{Average potential energy of pentane by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:pentane_pe}
 \end{figure}
 The potential energies for the constrained bond pentane are much lower because the bond lengths for all systems are fixed at their equilibrium length, which is the minima of the harmonic bond potential.
 In the flexible bond model, the bond is allowed to deviate from its equilibrium length, resulting in higher contribution to potential energy from the bond. 
@@ -380,21 +379,21 @@ This difference will be seen in the potential energies for other systems.
 When the bond lengths are fixed (as in the water and benzene models), the potential energy values observed by MD are closer to those observed by MC. 
 (A direct comparison of flexible vs fixed bonds is shown in \autoref{fig:pentane_pe}, but \autoref{fig:water_pe} and \autoref{fig:benzene_pe} also are rigid models or have fixed bonds.)
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_summary.png}
+    \caption{Average density of benzene by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:benzene_density}
+\end{figure}
 Next, let's examine UA benzene, which is a ring structure modelled as a rigid body. 
 I will use the term "rigid body", although the actual implementation may vary depending on the options available in each engine.
 Some engines may be fixing bonds, angles, and dihedrals, while others (like HOOMD) may support true rigid bodies.
-Although the implementations of rigidness may differ between engines, the average density of benzene between engines agrees within error \autoref{fig:benzene_density}.
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_summary.png}
-    \caption{Average density of benzene by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:benzene_density}
-\end{figure}
+Although the implementations of rigidness may differ between engines, the average density of benzene between engines agrees within error (see \autoref{fig:benzene_density}).
 Again we see slightly lower density with greater variation in MC, the reasons for this are likely the same as with methane. % should I even say this?
 \autoref{fig:benzene_pe} shows the potential energies of benzene by engine.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_pe_summary.png}
-    \caption{Average potential energy of benzene by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:benzene_pe}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/benzeneUA_pe_summary.png}
+    \caption{Average potential energy of benzene by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:benzene_pe}
 \end{figure}
 With the exception of MCCCS, the potential energies agree within error. 
 Further investigation will be required into the incongruous energy value reported by MCCCS.
@@ -403,35 +402,35 @@ Next, let's examine SPC/E water, which is modelled as a rigid three-site charged
 \autoref{fig:water_density} shows the density of water by engines at three statepoints.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_summary.png}
-    \caption{Average density of water at three statepoints by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:water_density}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_summary.png}
+    \caption{Average density of water at three statepoints by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:water_density}
 \end{figure}
 The density of water at each statepoint appears to agree within error between all engines
 The average densities are also relatively close to the predicted values: 0.99991, 0.99656, and 0.98953 g/cm$^3$, respectively \cite{NISTwebbook}.
 The potential energies of water at these three statepoints \autoref{fig:water_pe} show similar agreement with the exception of LAMMPS.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_pe_summary.png}
-    \caption{Average potential energy of water by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:water_pe}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/waterSPCE_pe_summary.png}
+    \caption{Average potential energy of water by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:water_pe}
 \end{figure}
 It seems that this discrepancy is related to the PPPM implementation in LAMMPS because the potential energy is systematically high in both charged systems (see \autoref{fig:water_pe} and \autoref{fig:ethanol_pe}).
 Further investigation into this discrepancy will be required.
 
 Finally, let's look at the most complex system, all-atom ethanol, which is a fully-flexible molecule with charges.
-(Full flexibility, of course, depends on the engine's capabilities, so MD engines modelled this system with flexible bonds and MC engines using fixed bonds.)
+(Full flexibility, of course, depends on the engine's capabilities, so MD engines modelled this system with flexible bonds and MC engines used fixed bonds.)
 The densities of ethanol by engines at three statepoints is shown in \autoref{fig:ethanol_density}.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_summary.png}
-    \caption{Average density of ethanol by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:ethanol_density}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_summary.png}
+    \caption{Average density of ethanol by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:ethanol_density}
 \end{figure}
 The densities agree within error for each method (MC or MD), but this time the density observed in MD is higher than that in MC.
 It is hard to make a clear statement for what is causing this discrepancy in densities between the two methods with the data available, but comparison with \autoref{fig:pentane_density} could suggest that the higher density observed in MD is due to the flexible bonds.
 The potential energies of ethanol (see \autoref{fig:ethanol_pe}) show the greatest variability between engines; however, this can be attributed to two issues which have already been discussed.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_pe_summary.png}
-    \caption{Average potential energy of ethanol by engine. Average of independent samples from equilibrated regions of 16 replicates. Error bars represent two standard deviations.}\label{fig:ethanol_pe}
+    \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/ethanolAA_pe_summary.png}
+    \caption{Average potential energy of ethanol by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:ethanol_pe}
 \end{figure}
 The first is that the MD engines are using flexible bonds while the MC engines are using fixed bonds.
 \autoref{fig:pentane_pe} shows that when the only difference is whether bonds are flexible or fixed, the potential energy of the fixed bonds will be much lower, which explains the lower potential energy seen in the MC engines in \autoref{fig:ethanol_pe}.
@@ -439,6 +438,20 @@ The second is the yet to be understood discrepancy with LAMMPS in the PPPM model
 
 \section{Conclusions}
 
-initially seemed like an easy task
-took a lot of time and discussion.
-Beyond just an opportunity to validate that our results were "right," working on this project together with other simulators with different backgrounds and expertise was an invaluable opportunity to learn.
+Achieving equivalent results in molecular simulations can be tricky because it's not always possible to implement models identically in different engines.
+For simple models like UA methane, sampling differences arise, but the engines largely agree.
+As our models increase in complexity so do the deviations in our results between engines and methods.
+There’s moderately good consensus among the UA pentane constrained-bond models, but the flexible bond model has greater variation and highlights the discrepancy when comparing against the constrained model.
+The potential energy and density calculations of rigid UA benzene appear to demonstrate consensus, aside from MCCCS, but this deviation gives us a direction to investigate.
+In the SPC/E water and AA ethanol simulations, we see much more variance between MD and MC engines but consistency among each simulation method.
+Performing these consistency checks helps find bugs and identify modeling choices that give rise to these differences.
+
+This study was a community-driven effort to show MoSDeF tools can help achieve reproducible results across engines.
+Beyond just an opportunity to validate that our results were "correct", working on this project together with other simulators was an invaluable opportunity to learn.
+Initially, this project seemed to be an easy task. 
+However, it quickly became apparent that even seemingly minor choices relevant to the simulation parameters required discussion.
+These discussions forced us to dig into each engines code in a way that helped us better understand the simulations we were running.
+Each group brought a different background and expertise which was of great benefit when trying to pinpoint the source of a discrepancy.
+Already, this collaboration has prompted many improvements to MoSDeF tools and the engines they support.
+Ultimately the goal of molecular simulation is to probe the thermodynamic equilibrium of materials in ways which may give insight that experiment cannot.
+In order to draw meaningful conclusions from simulation we must understand how the choices made in our model influence the results.
