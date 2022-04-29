@@ -1,15 +1,28 @@
-\chapter{Conclusion}
+\chapter{Conclusion and Outlook}
 \label{chap:conclusion}
 
-As scientists we can't guarantee that our results are correct, but we can guarantee that they are reproducible.
+%As scientists we can't guarantee that our results are correct, but we can guarantee that they are reproducible.
+In this work we aim to show what reproducibility can look like in molecular simulation in particular and in computational sciences in general.
+As someone who came into my PhD with almost no coding experience, I know the struggles of trying to reproduce an unfamiliar work---especially scientific scripts which may be done to achieve a purpose without really considering the next user. 
+Although designing with the next user in mind may take more work upfront, with practice it becomes habit and helps promote efficiency and reproducibility. 
+The effort toward clear documentation and transparency in methods is a benefit for anyone trying to reproduce the method, including the original author.
+Collaborative development through all stages of the project helps to ensure that our methods and documentation make sense from a different perspective.
+Being part of a broader collaboration where I was encouraged to build on and change some of the existing framework helped me build confidence and to learn how to make my own projects.
+Discussion of these works with others from diverse backgrounds and expertise has helped me to develop a more well-rounded understanding of molecular simulation.
+Not only has this community helped me develop a better understanding of simulation, but also helped me design tools from a simulator's perspective.
 
-My hope is that I have shown what reproducibility can look like in molecular simulation in particular and in computational sciences in general.
-As someone who came into my PhD with almost no coding experience, I know the struggles of trying to reproduce someone else's work---especially scientific scripts which may be done to achieve a purpose without really considering the next user. 
-
-Being able to be part of a broader collaboration where I was encouraged to build on and change some of the existing framework helped me to learn how to make my own projects.
-Sharing and discussion of these works have helped me to see them from a different perspective and find where things were not clear.
-
-using computational tool to building tools and workflows of my own
-
-molecular structure
-
+I am excited by the prospects of my work to persist and be used after I graduate, and I look forward to seeing future developments. 
+Currently an undergraduate scientist in our lab is using \texttt{PlanckTon} to investigate the molecule Y6, a component in the current state-of-the-art OPV.
+The SMARTS definitions for all the atom types in Y6 are not yet present in the forcefields provided with \texttt{foyer}, so she is working to parameterize this compound through other methods and add these parameters to the custom GAFF forcefield shipped with \texttt{PlanckTon}.
+Although the workflow for adding Y6 is not as simple as other compounds, the modular framework and workflows are still in place to help her quickly spin up simulations once she has her parameters in place.
+As she has worked on this task, she has provided essential feedback on gaps in documentation.
+The work of \citet{Miller2018a} has shown the importance of polydisperse polymer lengths and their ability to form tie-chains for charge transport simulations. 
+Another scientist in our lab has been developing tools for initializing a system of polymers with a distribution of lengths, and his work has included completely revamping \texttt{mBuild}'s polymer builder.
+And while these tools are still under development, they would be a great addition to \texttt{PlanckTon} \cite{polybinder}.
+Although \texttt{GRiTS} has some rudimentary fine-graining ability, further development of this method will be useful for its use in coarse-graining applications.
+The code and workflows that I leave behind have been designed for the next user, and I look forward to the science to which they can be applied. 
+The order parameter workflow could easily be applied to new compounds and compound mixtures in order to find novel OPV compounds or determine the state at which self-assembly most robustly produces the morphologies best for charge transport.
+The most efficient way to sample this state space would be to start with a small system size at a sparse selection of temperatures, solvent qualities, and densities, then increase the system size and state-space precision after high-order regions are identified.
+I also look forward to the conclusions of the reproducibility study.
+Already so many fixes and new features have been implemented as a result of the study's findings, and I hope that the MoSDeF community will continue to grow and strive for reproducibility between all the engines we support.
+These observations support our thesis that community-built open tools contribute to more efficient, correct scientific software development.

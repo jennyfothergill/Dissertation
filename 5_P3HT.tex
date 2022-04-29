@@ -86,10 +86,10 @@ This allows our software to be used without ever having to manually install it o
 Not only does this make our software stack easier to use, but it makes it more portable---we can have the exact same environment on our school cluster or XSEDE.
 And if someone wants to reproduce our work, they can access the exact container we used.
 
-The first challenge, managing a large dataspace, is handled using the Signac framework. Although designing code to work within a framework like Signac does add some cognitive load, after this initial lift the project becomes more extensible and flexible regrading changes in the parameter space. We will cover the tool designed to manage and submit OPV MD simulations within this framework, PlanckTon, later in the chapter.
+The first challenge, managing a large dataspace, is handled using the \texttt{signac} framework. Although designing code to work within a framework like \texttt{signac} does add some cognitive load, after this initial lift the project becomes more extensible and flexible regrading changes in the parameter space. We will cover the tool designed to manage and submit OPV MD simulations within this framework, \texttt{PlanckTon}, later in the chapter.
 
 Although the application of the united-atom model to our P3HT system was not overly complicated as it only contained 3 types, it required manual atom typing, which presented another hurdle to applying this method to a new and perhaps more complicated compound. 
-By using the foyer forcefield dissemination and atom-type engine \cite{foyer} our atom types can be automatically assigned based on the chemical connectivity. This allows us to more easily extend to new compounds.
+By using the \texttt{foyer} forcefield dissemination and atom-type engine \cite{foyer} our atom types can be automatically assigned based on the chemical connectivity. This allows us to more easily extend to new compounds.
 
 Calculating the order parameter originally depended on a workflow that was hard-coded for P3HT and selected specific atom indices---this depended on the particle order in the simulation being the same every time, which it was because routine initialization methods were used, but it did not allow for the method to be applied to other compounds.
 
@@ -99,34 +99,34 @@ Next we will discuss the various tools used in this project.  \autoref{fig:p3ht-
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/workflow.png}
-    \caption{Overview of the structural analysis workflow. First, the workspace is created in the PlanckTon-flow framework and all simulations are run. Then GRiTS is used on the output simulation data to find the thiophene centers. Finally, the order parameter function in cmeutils is used to calculate the order parameter of each simulation trajectory and GIXStapose is used to perform GIXS analysis.}\label{fig:p3ht-workflow}
+    \caption{Overview of the structural analysis workflow. First, the workspace is created in the \texttt{PlanckTon-flow} framework and all simulations are run. Then GRiTS is used on the output simulation data to find the thiophene centers. Finally, the order parameter function in cmeutils is used to calculate the order parameter of each simulation trajectory and GIXStapose is used to perform GIXS analysis.}\label{fig:p3ht-workflow}
 \end{figure}
 This workflow was designed such that the output from each code can be used as the input for the next with little to no modification. 
 Many of these code bases are collaborative works, so I will give credit to the contributors and creators of the underlying building blocks.
 
 \subsection{PlanckTon}
-In order to initialize simulations in a reproducible way, we have designed PlanckTon: a wrapper for the initialization, management, and submission of organic photovoltaic molecular dynamics simulations using the HOOMD-Blue engine \citep{planckton, Jankowski2019, Anderson2020}.
-The PlanckTon software includes some OPV compounds commonly used in our lab to guarantee that all simulations are initialized with the exact same starting compound; however, the workflow is designed to easily accept any MoSDeF compatible chemical input file format including SMILES strings. 
-The code base also ships with custom XMLs for OPLS-UA and GAFF and a separately packaged GAFF XML \citep{DeFever}, but is compatible with any Foyer XML. 
-The initialization procedure of PlanckTon is as follows: First the user selects a compound or mixture of compounds, the number of said compounds, the temperature, the density, and the solvent parameter. 
-As in Ref.~\citet{Miller2018}, the solvent in PlanckTon is modelled implicitly, so the solvent quality, $\epsilon_{s}$, refers to a scaling factor on the non bonded forces.
+In order to initialize simulations in a reproducible way, we have designed \texttt{PlanckTon}: a wrapper for the initialization, management, and submission of organic photovoltaic molecular dynamics simulations using the HOOMD-Blue engine \citep{planckton, Jankowski2019, Anderson2020}.
+The \texttt{PlanckTon} software includes some OPV compounds commonly used in our lab to guarantee that all simulations are initialized with the exact same starting compound; however, the workflow is designed to easily accept any MoSDeF compatible chemical input file format including SMILES strings. 
+The code base also ships with custom XMLs for OPLS-UA and GAFF and a separately packaged GAFF XML \citep{DeFever}, but is compatible with any \texttt{foyer} XML. 
+The initialization procedure of \texttt{PlanckTon} is as follows: First the user selects a compound or mixture of compounds, the number of said compounds, the temperature, the density, and the solvent parameter. 
+As in Ref.~\citet{Miller2018}, the solvent in \texttt{PlanckTon} is modelled implicitly, so the solvent quality, $\epsilon_{s}$, refers to a scaling factor on the non bonded forces.
 In order to more robustly achieve high density morphologies, the simulation volume is initialized at a lower density and then shrunk down to the desired density at high temperature\cite{Jankowski2013,Marsh2014,Jones2017,Henry2017a,Miller2018}. 
-The creation of our simulation volume, the forcefield atom-type assignment, and the creation of the HOOMD force objects is completely handled by mBuild and foyer in the MoSDeF framework\citep{mbuild,foyer}.
-By using the modular, general system initialization of the mBuild and foyer, we get two benefits: (1) we draw on the knowledge base of the MoSDeF community--more users means we can find and resolve errors more quickly, and (2) we can more easily incorporate the system initialization in our other projects. 
-Once the system and forces are initialized, PlanckTon uses the NVT ensemble via the Nosé-Hoover thermostat \citep{Martyna1994d, Martyna1996} as implemented in the HOOMD-Blue molecular dynamics engine. 
+The creation of our simulation volume, the forcefield atom-type assignment, and the creation of the \texttt{HOOMD} force objects is completely handled by \texttt{mBuild} and \texttt{foyer} in the MoSDeF framework\citep{mbuild,foyer}.
+By using the modular, general system initialization of the \texttt{mBuild} and \texttt{foyer}, we get two benefits: (1) we draw on the knowledge base of the MoSDeF community--more users means we can find and resolve errors more quickly, and (2) we can more easily incorporate the system initialization in our other projects. 
+Once the system and forces are initialized, \texttt{PlanckTon} uses the NVT ensemble via the Nosé-Hoover thermostat \citep{Martyna1994d, Martyna1996} as implemented in the HOOMD-Blue molecular dynamics engine. 
 The initial velocities and angular momenta are randomly assigned from the Maxwell-Boltzmann distribution.
 By having our entire process scripted, we can have everything about our process documented and available for scrutiny and reduce the potential human error inherent when switching between codes or transferring files.
-Through PlanckTon-flow, this tool is supported by the Signac framework, which handles the parameter space initialization and management and submission to various computing clusters. Because this workspace is created using Signac, Signac can be used to navigate it. This allows to reference our data via the statepoint (e.g., what temperature and $\epsilon_{s}$ it was run at) without ever having to create or manage a complicated directory structure or naming scheme.
+Through \texttt{PlanckTon-flow}, this tool is supported by the \texttt{signac} framework, which handles the parameter space initialization and management and submission to various computing clusters. Because this workspace is created using \texttt{signac}, \texttt{signac} can be used to navigate it. This allows to reference our data via the statepoint (e.g., what temperature and $\epsilon_{s}$ it was run at) without ever having to create or manage a complicated directory structure or naming scheme.
 
-PlanckTon was started by my lab mates Mike, Evan, and Matty, and I have assumed responsibility for its development including:
-Updating to HOOMD 2 allowed us to use the HOOMD simulation initialization functions in mBuild. This allows the package to be more modular and useable by others; any improvements or bugfixes needed in the \lstinline{create_hoomd_simulation} function can be contributed back to mBuild, which allows the whole community to benefit.
+\texttt{PlanckTon} was started by my lab mates Mike, Evan, and Matty, and I have assumed responsibility for its development including:
+Updating to \texttt{HOOMD} version 2 allowed us to use the \texttt{HOOMD} simulation initialization functions in \texttt{mBuild}. This allows the package to be more modular and useable by others; any improvements or bugfixes needed in the \lstinline{create_hoomd_simulation} function can be contributed back to \texttt{mBuild}, which allows the whole community to benefit.
 Adding automated docker container builds.
-Generalizing the initialization procedure to allow starting compounds to be loaded from SMILES strings or any input file and these untyped compounds can be typed on the fly using any foyer compatible forcefield.
-Adding support for all HOOMD neighborlists, which allows better sampling of sparse systems. 
+Generalizing the initialization procedure to allow starting compounds to be loaded from SMILES strings or any input file and these untyped compounds can be typed on the fly using any \texttt{foyer} compatible forcefield.
+Adding support for all \texttt{HOOMD} neighborlists, which allows better sampling of sparse systems. 
 And adding support for user specified temperature ramps, allowing users to perform temperature annealing, a technique used in OPV active layer synthesis.
-In order to be more clear about the units used in PlanckTon, the unyt package is used to handle all unit conversions. This package allows for values to be tagged with their unit and then all conversions can be handled by the package.
+In order to be more clear about the units used in \texttt{PlanckTon}, the unyt package is used to handle all unit conversions. This package allows for values to be tagged with their unit and then all conversions can be handled by the package.
 
-PlanckTon is unique, but there exist other tools to manage molecular dynamics simulations. There is a web-based application that facilitates MD simulation using cloud computing services and automates related tasks \citep{Nicolas-Barreales2021} and a command line tool that automates many common MD tasks \citep{Rackers2018}, but I have not seen a pure python implementation which can also manage a large dataspace.
+\texttt{PlanckTon} is unique, but there exist other tools to manage molecular dynamics simulations. There is a web-based application that facilitates MD simulation using cloud computing services and automates related tasks \citep{Nicolas-Barreales2021} and a command line tool that automates many common MD tasks \citep{Rackers2018}, but I have not seen a pure python implementation which can also manage a large dataspace.
 
 \subsection{GRiTS}
 I developed GRiTS as a tool to assist in applying a coarse-grain mapping and to backmap a coarse-grain system to a fine one. 
@@ -139,14 +139,14 @@ When looking at an entire simulation trajectory, the SMARTS matching algorithm c
 So GRiTS uses the following simplifying assumptions: Chemical bonds are not formed or broken over the course of the simulation---this allows only the first frame of the trajectory to be used for mapping. 
 Using only the first frame of the trajectory is also useful because this way the molecules in the system can be guaranteed to be chemically reasonable---i.e., the bonds and angles are not distorted, aromatic systems should be planar, etc. 
 It is also assumed that if molecules have the same number of atoms, they have the same chemical structure. 
-This allows us to use the clustering algorithms of implemented in the Freud analysis library to break the snapshot into molecules and only perform SMARTS matching on each molecule type, then extrapolate the mapping out to other molecules of the same type.
+This allows us to use the clustering algorithms of implemented in the \texttt{freud} analysis library to break the snapshot into molecules and only perform SMARTS matching on each molecule type, then extrapolate the mapping out to other molecules of the same type.
 
 When working with a UA system, GRiTS can also infer hydrogen positions and bonding. This allows for SMARTS strings to find matches in UA systems. The hydrogen inferring method uses OpenBabel and requires that the first frame of the trajectory be chemically reasonable.
 
 There are other tools which handle creating coarse-grain mappings such as VOTCA \citep{Ruhle2009}. 
 This tool will crate a coarse grain trajectory from an atomistic one given an XML file mapping which requires the user to specify everything from the atom types involved in the bead to the bond and angle information.
 VOTCA also has many other functions that GRiTS does not such as coarse-graining (including potential development), charge-transport, and excitation transport.
-VOTCA requires the user to edit an xml file in which formatting and whitespace have meaning, and define not only the mapping but also the bonding and angles for the coarse grain mapping, which could easily be inferred from the mapping scheme.
+VOTCA requires the user to edit an XML file in which formatting and whitespace have meaning, and define not only the mapping but also the bonding and angles for the coarse grain mapping, which could easily be inferred from the mapping scheme.
 Creating a mapping with GRiTS is more intuitive because the only parameter needed is a SMILES string, there are no potentially difficult to parse files for the user to edit, and all bonding and angles within the coarse grain structure are inferred.
 
 \subsection{GIXStapose}
@@ -159,7 +159,7 @@ This work was presented at Scipy2020 \cite{gixstapose-scipy}.
 
 \section{Methods}
 \subsection{Generate simulation data}
-A PlanckTon-flow workspace of 40 simulations defined by their temperature and solvent parameter ($\epsilon_{s}$) was initialized. Each system comprised of 100 united-atom (UA) P3HT 16-mers parameterized with GAFF. %(The compound can be found in planckton as "P3HT-16-gaff" and the forcefield is "gaff-custom".) 
+A \texttt{PlanckTon-flow} workspace of 40 simulations defined by their temperature and solvent parameter ($\epsilon_{s}$) was initialized. Each system comprised of 100 united-atom (UA) P3HT 16-mers parameterized with GAFF. %(The compound can be found in planckton as "P3HT-16-gaff" and the forcefield is "gaff-custom".) 
 All nonbonded forces used a cutoff value of 8.91 \AA~ (2.5 times the largest sigma value). The target density for all was 0.56 $\frac{g}{cm^{3}}$. All simulations used a timestep of 2 fs and started by shrinking the box from 125 times the the target volume to the target volume (789 nm$^3$) at 629 K, with a thermostat coupling value (tau) of 2 ps, run over 0.2 ns. Once the shrink step was finished, each simulation was run at its own combination of temperature and $\epsilon_{s}$ ranging from 125, 188 to 629 K and 0.2 to 1.0, respectively. These runs used a thermostat coupling value (tau) of 0.6 ps and were run for 200 ns. All were run in the \lstinline{cmelab/planckton_gpu:v0.6.1} docker container.
 
 \subsection{Create coarse grain mapping}
@@ -198,7 +198,7 @@ Using all particles in the united-atom thiophene may result in easier to see spo
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/ua_vs_cg_dp.png}
-    \caption{Diffraction patterns of P3HT using (\textbf{a}) all thiophene particles in the UA trajectory (\textbf{b}) thiophene centers found using GRiTS. Both patterns were generated using GIXStapose at the same camera angle on the simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K.}\label{fig:ua-vs-cg-dp}
+    \caption{Diffraction patterns of P3HT using (\textbf{a}) all thiophene particles in the UA trajectory (\textbf{b}) thiophene centers found using GRiTS. Both patterns were generated using GIXStapose at the same camera angle on the simulation trajectory run at $\epsilon_{s}$ 0.4 and T 251K.}\label{fig:ua-vs-cg-dp}
 \end{figure}
 Although coarse-graining may provide clarity with much larger or less ordered structures, in this very small ordered system, the peaks are more easily visible in the when all the thiophene particles are used in diffraction.
 
@@ -206,7 +206,7 @@ As \autoref{fig:highorder-dp}c was generated using GIXStapose, we can examine th
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/scene_annotated.png}
-    \caption{Real space structure of thiophene centers found using GRiTS from the simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K. This figure is generated using fresnel via GIXStapose with the same "camera angle" as \autoref{fig:highorder-dp}c. }\label{fig:highorder-centers}
+    \caption{Real space structure of thiophene centers found using GRiTS from the simulation trajectory run at $\epsilon_{s}$ 0.4 and T 251K. This figure is generated using fresnel via GIXStapose with the same "camera angle" as \autoref{fig:highorder-dp}c. }\label{fig:highorder-centers}
 \end{figure}
 \autoref{fig:highorder-centers} shows the thiophene centers at a high-order statepoint. We can clearly see the lamellar spacing in the vertical direction, and less clearly the $\pi$-$\pi$ stacking in the horizontal direction. By viewing the real space structure from the exact angle as the diffraction pattern, it is easier to correlate periodic features with their diffraction peaks.
 
@@ -214,7 +214,7 @@ To confirm that the thiophene center beads are being placed correctly, we can vi
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/cg-overlay_scene.png}
-    \caption{Overlay of thiophene bead centers (translucent blue) found using GRiTS with united atom carbon (grey) and sulfur (yellow) in P3HT simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K. This figure is generated using fresnel via GIXStapose with the same "camera angle" as \autoref{fig:highorder-dp}c and \autoref{fig:highorder-centers}}\label{fig:centers-overlay}
+    \caption{Overlay of thiophene bead centers (translucent blue) found using GRiTS with united atom carbon (grey) and sulfur (yellow) in P3HT simulation trajectory run at $\epsilon_{s}$ 0.4 and T 251K. This figure is generated using fresnel via GIXStapose with the same "camera angle" as \autoref{fig:highorder-dp}c and \autoref{fig:highorder-centers}}\label{fig:centers-overlay}
 \end{figure}
 \autoref{fig:centers-overlay} shows that the thiophene beads are correctly capturing the geometric centers of the thiophene moieties in the trajectory given that the sulfur atoms are found almost entirely within the thiophene beads. This view also gives us a better perspective on what forces may be causing the lamellar separation---namely, side-chain interactions.
 
@@ -222,12 +222,12 @@ We can also show correlation between low order parameter and disordered systems 
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/cg-trajectory-amorphous_scene.png}
-    \caption{Real space structure of thiophene centers found using GRiTS from the simulation trajectory ran at $\epsilon_{s}$ 0.2 and T 629K. This figure is generated using fresnel via GIXStapose with the same "camera angle" as \autoref{fig:loworder-dp}c}\label{fig:loworder-centers}
+    \caption{Real space structure of thiophene centers found using GRiTS from the simulation trajectory run at $\epsilon_{s}$ 0.2 and T 629K. This figure is generated using fresnel via GIXStapose with the same "camera angle" as \autoref{fig:loworder-dp}c}\label{fig:loworder-centers}
 \end{figure}
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/opa_notebook/Order_parameter_analysis_21_0.png}
-    \caption{GIXS pattern generated in GIXStapose using thiophene centers found using GRiTS from the simulation trajectory ran at $\epsilon_{s}$ 0.2 and T 629K.}\label{fig:loworder-dp}
+    \caption{GIXS pattern generated in GIXStapose using thiophene centers found using GRiTS from the simulation trajectory run at $\epsilon_{s}$ 0.2 and T 629K.}\label{fig:loworder-dp}
 \end{figure}
 \autoref{fig:loworder-centers} shows the thiophene centers in a basically random configuration and \autoref{fig:loworder-dp} shows a general lack of peaks.
 
@@ -235,9 +235,9 @@ So, we have demonstrated that our ordering trends observed in P3HT are robust to
 
 \section{Conclusions}
 
-By using  mBuild with foyer in PlanckTon to initialize our simulations, we can more easily use different input file formats including smiles strings and any foyer forcefield. 
+By using  \texttt{mBuild} with \texttt{foyer} in \texttt{PlanckTon} to initialize our simulations, we can more easily use different input file formats including smiles strings and any \texttt{foyer} forcefield. 
 Using GRiTS to select the desired part of the molecule removes any need for manual indexing, which allows us to more easily extend the order parameter calculation to other planar, conjugated molecules like perylene or ITIC.
-Working within the Signac framework allows us to quickly and easily sample the necessary parameter space without needing to manually create or manage directories. 
+Working within the \texttt{signac} framework allows us to quickly and easily sample the necessary parameter space without needing to manually create or manage directories. 
 We've also implemented semantic versioning in all our lab's codebases with version tagged docker containers which helps users to keep track of when changes are made and ensure we use the same code state.
 By using and building on existing code, we work with a community of open-source molecular simulators. 
 
@@ -254,14 +254,11 @@ For example the GRiTS code was designed to create coarse-grain mappings, but the
 It is hard to measure the success of that goal, but I submit the following examples:
 In the summer of 2021, our lab hosted two students from the NSF Research Experience for Undergrads (REU) program and a high school teacher from the Research Experience for Teachers (RET) program. 
 None of these students had any prior knowledge of shell scripting, python, or molecular simulation. 
-After a week or so of introductory training, the three researchers were introduced to PlanckTon. 
-Each researcher chose a molecule, and together with three undergrad researchers in the lab, were able to run 24K SUs worth of MD simulations on XSEDE using PlanckTon. 
+After a week or so of introductory training, the three researchers were introduced to \texttt{PlanckTon}. 
+Each researcher chose a molecule, and together with three undergrad researchers in the lab, were able to run 24K SUs worth of MD simulations on XSEDE using \texttt{PlanckTon}. 
 A new PhD student in our lab with a strong background in software engineering but new to molecular simulation and chemistry was able to use GRiTS to create a coarse grain mapping in a matter of days. 
 She did this without any one-on-one training beyond the documentation and examples.
 
 By developing code with TRUE principles, other scientists can more easily use and extend this project.
 Hopefully this software ecosystem will continue to be dynamic and evolving. 
-The work of \citet{Miller2018a} has shown the importance of polydisperse polymer lengths and their ability to form tie-chains for charge transport simulations. 
-Tools for initializing disperse polymers are under development and would be a great addition to PlanckTon \cite{polybinder}.
-And these workflows are modular and flexible enough to handle these changes.
-Big problems like solving the climate crisis with photovoltaic technology require robust solutions. 
+Big problems like solving the climate crisis with photovoltaic technology require robust solutions and writing usable code allows us to draw on the strength of the community. 

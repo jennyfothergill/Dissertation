@@ -4,7 +4,7 @@ Molecular simulation gives us the unique ability to peer into the equilibrium st
 The length scale and properties we observe depend on the technique.
 Using density functional theory, we can obtain the optimized ground state structure or we can look at the induced shifts in the electron density in the form of charges.
 Using molecular dynamics, we can sample the equilibrium structures of the thermodynamic ensemble. 
-Analysis techniques can be used to validate simulation results with experiment; for example, structural analysis techniques like GIXS allow us to probe the periodic structure, while UV-Vis absorption allows us to determine the quantum splitting induced in the molecular orbital energies.
+Analysis techniques can be used to validate simulation results with experiment; for example, structural analysis techniques like grazing-incidence X-Ray scattering (GIXS) allow us to probe the periodic structure, while ultraviolet-visible (UV-Vis) absorption spectroscopy allows us to determine the quantum splitting induced in the molecular orbital energies.
 Even without direct comparison to experiment, comparing the relative energies of two different structures using the same model can inform us about which structure is more stable, and the charges on various atoms can help us determine which interactions stabilize that structure.
 Comparing the results obtained using different models or engines can inform us of the robustness of reproducibility of our method.
 
@@ -30,7 +30,7 @@ When reporting experiments conducted using established codebases, which are stab
 \end{itemize}
 When reporting experiments conducted using custom code, in addition to the above hurdles, the following barriers stand in the way of reproducibility:
 \begin{itemize}
-    \item Researchers may not provide the source code, whether due to fears of being scooped or unfamiliarity with software distribution
+    \item Researchers may not provide the source code, whether due to fears of others using the code to publish before them or unfamiliarity with software distribution
     \item If the code is available, it may be non-functioning due to lack of unit-tests and continuous integration
     \item As user developed code is often under revision, inadequate version reporting or complete absence of version control
     \item Poor documentation and examples may make the code base unusable to all but its developers
@@ -53,9 +53,9 @@ Although participation in software-specific training may add to a scientist's up
 
 This training can also help scientists use available tools to increase their productivity while helping to clearly communicate their process to others. 
 Version control software, like git, is a great benefit for tracking changes to a code repository, and many repository hosting services, like GitHub or GitLab, also provide issue tracking and project boards which can be used to manage and organize collaboration and development \cite{Gentzkow2014}.
-To help users understand the purpose behind a code and how it should be run, there are many tools for creating and hosting documentation such as ReadtheDocs and sphinx.
+To help users understand the purpose behind a code and how it should be run, there are many tools for creating and hosting documentation such as \texttt{ReadtheDocs} and \texttt{sphinx}.
 Providing examples and tutorials can help make the code more usable.
-Jupyter notebooks, which contain cells of formatted text and images with runnable code, can be a great way for scientists to show and tell the story of their work \cite{Rule2019a}.
+\texttt{Jupyter} notebooks, which contain cells of formatted text and images with runnable code, can be a great way for scientists to show and tell the story of their work \cite{Rule2019a}.
 In addition to documentation to help users get the code running, developers can package their code to help users more easily build the software stack necessary to run it.
 Providing the exact names and versions of software aids reproducibility; however, providing containers or virtual machines which contain the exact software stack is even better. This saves users the hassle of installation and prevents opportunities for version mismatching \cite{Cito2016, Shirts2008a}.
 These tools may add to the cognitive load of a computational scientist, but ultimately they make the code they develop more useable by the community.
@@ -70,10 +70,10 @@ And there are many simple ways to help newcomers feel welcome from having public
 
 Additionally, reproducibility can be aided by not only sharing the source code but also the unedited raw data and analysis methods \cite{Miyakawa2020}. 
 By having the complete process---from data collection, to analysis, and even figure creation---be completely automated, transparent, and open, computational results can be the most reproducible and useful to other researchers and society as a whole \cite{Taylor2019, Donoho2009}.
-The principles which make computational research transparent, reproducible, useable by others, and extensible(TRUE) \cite{Thompson2020}.
+The principles which make computational research transparent, reproducible, useable by others, and extensible (TRUE) \cite{Thompson2020}.
 An area where transparency, reproducibility, useability, and extensibility is really brought to the forefront is in my experience developing scientific software with the Molecular Simulation and Design Framework (MoSDeF) team.
-I have contributed to the development of open-source packages including mBuild, Foyer, Signac, Fresnel, and HOOMD \cite{mbuild, foyer, signac, fresnel, hoomd}.
-These contributions have given me ample opportunity to exercise best software development practices such as writing documentation, using version control, developing unit tests, employing CI, using a fork \& pull workflow, etc.
+I have contributed to the development of open-source packages including \texttt{mBuild}, \texttt{Foyer}, \texttt{Signac}, \texttt{Fresnel}, and \texttt{HOOMD} \cite{mbuild, foyer, signac, fresnel, hoomd}.
+These contributions have given me ample opportunity to exercise best software development practices such as writing documentation, using version control, developing unit tests, employing continuous integration (CI), using a fork \& pull workflow, etc.
 This experience will help me to be more efficient in my future work.
 I've also gained valuable experience working as part of a team.
 As my work has been intertwined with existing projects, good collaborative skills were necessary.
@@ -87,16 +87,16 @@ Learning the intricacies and struggles and what matters to each simulation and h
 I then have used various analysis methods to validate these simulated morphologies with those observed in experiment. 
 Along the way, I have found my passion in helping to make computational sciences more accessible and reproducible.
 My work has focused on developing and using computational tools and workflows to predict and understand self assembly of electronically active molecules.
-The resulting four manuscripts, one poster, and one conference presentation span all scales from first-principles calculation of electronically active dimers to the creation of new tools for analyzing the long-range periodicities of large scale atomistic and CG simulations.
+The resulting four journal publications, two in-preparation manuscripts, two posters, and one conference presentation span all scales from first-principles calculation of electronically active dimers to the creation of new tools for analyzing the long-range periodicities of large scale atomistic and coarse-grain (CG) simulations.
 
-In this thesis I will write about times when I have used existing code and when I have developed code to run an experiment.
+In this thesis I describe projects in which I was both the lead code developer as well as projects where I needed to learn existing code to run  experiments.
 An additional focus of this thesis is the work that I have done to make the codebases I have contributed to TRUE in the hopes that they will serve others after I leave.
 
 In my first publication on dimer formation, an investigation of the excitonic splitting observed in cyanine dye dimers was done using density functional theory (DFT) \cite{Fothergill2018}.
 By comparing calculated with experimental absorption spectra it was found that the solvent may play a large role in the dimer formation and peak shifting.
 At this time I wrote some python code which used singular value decomposition to fit the mostly-planar dye molecules to a vector and a plane. 
 I showed a graphic for how this was done in the SI, but did not include any code or any details of what software versions I used. 
-The method is not theoretically complex and if I recall correctly I used a function from the Scipy library, but this work would have been more reproducible had the exact code and its dependencies been provided in the SI.
+The method is not theoretically complex and if I recall correctly I used a function from the \texttt{Scipy} library, but this work would have been more reproducible had the exact code and its dependencies been provided in the supporting information (SI).
 At the time, however I was not aware of version control using git or GitHub and instead used Dropbox's history.
 I did my best to report all details for the computations I performed although they were done in a proprietary package (Gaussian09), so the source code is not available.
 Along with the SI, PDB files for all DFT optimized structures were included, but I did not provide any of the raw input or output files used by Gaussian, nor did I report how I converted these structures to PDB.
@@ -111,15 +111,15 @@ I contributed DFT energies and optimized structures under the guidance of Dr Kin
 
 My contribution to the lab's perspective paper was mostly about my on-boarding experience trying to reproduce an existing model; a task which should be very straightforward but, which any computational scientist can attest, is far from simple \cite{Jankowski2019}.
 
-In my first poster contribution to the SciPy conference, I presented a tool called GIXStapose, an interactive structure viewer alongside its simulated diffraction pattern \cite{gixstapose, scipy2020}.
+In my first poster contribution as Boise State University's 2020 Research Computing days, I presented a tool called GIXStapose, an interactive structure viewer alongside its simulated diffraction pattern \cite{gixstapose}. And this work was also presented at the 2020 SciPy conference \cite{gixstapose, scipy2020}.
 
 My third publication was a thorough investigation of the effect of para-substituents to the crystal structure of diphenylurea molecules. I contributed DFT calculations, data analysis, writing in the initial draft, and images made in Figures 3, 4, 5, 6, and 8 \cite{Fothergill2021}.
 
 In a talk given at the 2021 American Institute of Chemical Engineers conference, I presented how MoSDeF tools can be used to update an older workflow, making it more TRUE. 
 I will elaborate on that workflow and its use to validate that the structures self-assembled by P3HT show the same structures and temperature and solvent dependency as in prior work using a different model.
 
-Finally, I will summarize my currently unpublished effort in a multi-university collaborative study to use MoSDeF tools reproducibility
+Finally, I will summarize my currently unpublished effort in a multi-university collaborative study to use MoSDeF tools reproducibly.
 
-In sum, working at all scales has crystallized the need for pipelines emphasizing transferability, reproducibility, useability, and extensibility.
+Through my work spanning all scales of molecular simulation---from implementing details in MD engines, to creating analysis software, to performing DFT calculations of single molecules, simulations of collections of molecules, and performing thousands of  simulations of collections of molecules across thermodynamic state space---the need and utility of  pipelines and practices emphasizing transferability, reproducibility, useability, and extensibility has only been reinforced.
 
 %% what can reproducibility look like in molecular simulation

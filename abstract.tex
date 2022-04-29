@@ -2,16 +2,19 @@
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-Reproducibility is a key principle of the scientific method.
-Through reproduction, the results of an experiment can be validated, strengthening the original conclusions.
-However, there are many barriers which stand in the way of reproducibility, especially in molecular simulation.
-Many of these issues can be fixed through automation, generalization, and packaging.
-We automate initialization, job submission, and forcefield management through the incorporation of tools from the Molecular Simulation and Design Framework (MoSDeF). 
-This dissertation will present development of infrastructure and workflows that help manage, initialize, and analyze molecular simulation results in a transparent, reproducible, usable by others, and extensible way. 
-Two scientific applications will be explored.
-A screening study where we validate that the structures self-assembled by P3HT show the same structure and state dependency as in prior work using a different model.
-And a multi-university collaborative reproducibility study where we examine modeling choices that give rise to differences between simulation engines.
+We apply molecular simulation to predict the equilibrium structure of organic molecular aggregates and how these structures determine material properties, with a focus on software engineering practices for ensuring correctness.
+Because simulations are implemented in software, there is potential for authentic scientific reproducibility in such work: An entire experimental apparatus (codebase) can be given to another investigator who should be able to use the same processes to find the same answers.
+Yet in practice, there are many barriers which stand in the way of reproducible molecular simulations that we address through automation, generalization, and software packaging. 
+Collaboration on and application of the  Molecular Simulation and Design Framework (MoSDeF) features prominently.
 
+We present structural investigations of organic molecule aggregates and the development of infrastructure and workflows that help manage, initialize, and analyze molecular simulation results through the following scientific applications:
+First principles density functional theory (DFT) study of cyanine dye dimers to observe excitonic splitting with comparison to experiment.
+An investigation of the supramolecular interactions which guide crystal self-assembly in diphenylurea transition metal complexes using DFT.
+A perspective on the ecosystem around molecular simulation, specifically training, community, and tools.
+A cataloguing of the energetic contributions of para-substituents to the crystal structure of diphenylurea molecules using DFT.
+A screening study where we validate that the self-assembled poly-3-hexylthiophene (P3HT) morphologies show the same state dependency as in prior work using a different model.
+And finally, a multi-university collaborative reproducibility study where we examine modeling choices that give rise to differences between simulation engines.
+In aggregate, we reinforce need for pipelines and practices emphasizing transferability, reproducibility, useability, and extensibility in molecular simulation.
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "BSUmain"

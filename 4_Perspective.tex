@@ -201,6 +201,7 @@ Refs.~\cite{Clarke2010} and \cite{Groves2013b} explain charge generation and tra
 We summarize recent morphology and charge transport predictions of the benchmark OPV material poly(3-hexylthiophene) (P3HT) in \autoref{table:p3ht-simulations}.
 Combining hardware, software, and coarse-graining advances, routine simulations of P3HT have improved by roughly four orders of magnitude over the last decade (0.6 monomer-$\mu$s in 2010 vs.~6900 monomer-$\mu$s in 2018). 
 
+\begin{landscape}
 \begin{table*}
     \caption{Overview of recent computational studies of P3HT, including method (MD or MC), resolution (AA - all-atom, UA - united-atom, 3CG - coarse-grained with 3 simulation elements per repeat unit, 1CG - coarse-grained with one element per repeat unit), approximate number of repeat units simulated, simulation time, computational effort (estimated largest product of Repeats Units $\times$ Time), and if the structures were used for charge-transport calculations. 
     The work of Carrillo et al.\cite{Carrillo2013} is a notable outlier, having successfully combined coarse models of millions of repeat units with development access to the then-most-powerful supercomputer on the planet.
@@ -241,6 +242,7 @@ Combining hardware, software, and coarse-graining advances, routine simulations 
 \end{tabular}
 \label{table:p3ht-simulations}
 \end{table*}
+\end{landscape}
 
 A challenge to making efficient OPVs is determining which combinations of photoactive compounds and thermodynamic conditions (temperature, pressure, concentrations) will result in a favorable morphology---a task well-suited to MD simulation.
 Probing this vast data space requires organizing ensembles of simulations, distributing them on high-performance computing clusters, retrieving the data, and then distilling the data into understandable chunks.
