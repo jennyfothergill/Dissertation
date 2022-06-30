@@ -122,9 +122,9 @@ A list of tools for molecular simulation is included in \autoref{table:open-sour
 \hline
 Package Name & Description  \\
 \hline Diffractometer\cite{Jones2017, Diffract} & Python code for generating scattering patterns from MD snapshots  \\
-\hline foyer\cite{Klein2018b} & Python package for atom-typing  \\
+\hline foyer\cite{Klein2018a} & Python package for atom-typing  \\
 \hline freud\cite{Harper2016} & Python exposure of C++ analysis: RDF, order parameters, correlation functions   \\
-\hline mBuild\cite{Klein2016mBuild} & Python package for system initialization with reusable, hierarchical components enabling complex initialization from simple building blocks \\
+\hline mBuild\cite{Klein2016} & Python package for system initialization with reusable, hierarchical components enabling complex initialization from simple building blocks \\
 \hline MDAnalysis\cite{Gowers2016} & Python package for MD trajectory analysis supporting many file formats  \\
 \hline MDTraj\cite{McGibbon2015} & Python package for analyzing and extracting information from MD trajectories  \\
 \hline MorphCT\cite{Jones2017, MorphCT} & Python package for obtaining and aggregating charge transport properties from MD snapshots  \\
@@ -203,7 +203,9 @@ Combining hardware, software, and coarse-graining advances, routine simulations 
 
 \begin{landscape}
 \begin{table*}
-    \caption{Overview of recent computational studies of P3HT, including method (MD or MC), resolution (AA - all-atom, UA - united-atom, 3CG - coarse-grained with 3 simulation elements per repeat unit, 1CG - coarse-grained with one element per repeat unit), approximate number of repeat units simulated, simulation time, computational effort (estimated largest product of Repeats Units $\times$ Time), and if the structures were used for charge-transport calculations. 
+    \caption[Overview of recent computational studies of P3HT, including method (MD or MC), resolution (AA - all-atom, UA - united-atom, 3CG - coarse-grained with 3 simulation elements per repeat unit, 1CG - coarse-grained with one element per repeat unit), approximate number of repeat units simulated, simulation time, computational effort (estimated largest product of Repeats Units $\times$ Time), and if the structures were used for charge-transport calculations. 
+    The work of Carrillo et al. is a notable outlier, having successfully combined coarse models of millions of repeat units with development access to the then-most-powerful supercomputer on the planet.
+    *Explicit numbers were not provided in the report, but are estimated here.]{Overview of recent computational studies of P3HT, including method (MD or MC), resolution (AA - all-atom, UA - united-atom, 3CG - coarse-grained with 3 simulation elements per repeat unit, 1CG - coarse-grained with one element per repeat unit), approximate number of repeat units simulated, simulation time, computational effort (estimated largest product of Repeats Units $\times$ Time), and if the structures were used for charge-transport calculations. 
     The work of Carrillo et al.\cite{Carrillo2013} is a notable outlier, having successfully combined coarse models of millions of repeat units with development access to the then-most-powerful supercomputer on the planet.
     *Explicit numbers were not provided in the report, but are estimated here.}
 \centering
@@ -254,7 +256,9 @@ These simplifications helped with both training and scaling timescale problems, 
 \begin{figure}
     \centering
     \includegraphics[width=3in]{{figures/pub4/diff_comparison}.pdf}
-    \caption{
+    \caption[a) Simulated and b) experimental grazing incident X-Ray scattering of P3HT show near identical features and wavenumbers along the (010) and (100) planes.
+        The agreement indicates the same structures are being probed in both cases.
+        Figure adapted with permission from Miller]{
         a) Simulated and b) experimental grazing incident X-Ray scattering of P3HT show near identical features and wavenumbers along the (010) and (100) planes.
         The agreement indicates the same structures are being probed in both cases.
         Figure adapted with permission from Ref.~\cite{Miller2018}.
@@ -265,7 +269,9 @@ These simplifications helped with both training and scaling timescale problems, 
 \begin{figure}
     \centering
     \includegraphics[width=3in]{figures/pub4/bdt_tpd_scattering.png}
-    \caption{
+    \caption[a) Experimental and b) simulated grazing incident X-Ray scattering of BDT-TPD showing agreement.
+	The agreement validates our simplified model. 
+	Reprinted with permission from Henry. Copyright 2017 American Chemical Society.]{
         a) Experimental and b) simulated grazing incident X-Ray scattering of BDT-TPD showing agreement.
 	The agreement validates our simplified model. 
 	Reprinted with permission from\cite{Henry2017a}. Copyright 2017 American Chemical Society.
@@ -408,7 +414,7 @@ The patchy trapezoids in \autoref{fig:mbuild}e permit quick testing of how patch
 \begin{figure}
     \centering
     \includegraphics[width=6in]{figures/pub4/mBuild.pdf}
-    \caption{a) Coarse-grained DNA initialized directly from sequence of nucleobases using the model from \cite{Knotts2007}, b) Micelle self-assembly from a coarse-grained model of fullerene and their oxides, c) truxene molecule with electroactive components core and three functional groups, d) examples of programmatically-generated asphaltene components, e) 2D patchy particles designed to self-assemble terminal structures.}\label{fig:mbuild} %remember labels after caption, not before!
+    \caption[a) Coarse-grained DNA initialized directly from sequence of nucleobases using the model from Knotts, b) Micelle self-assembly from a coarse-grained model of fullerene and their oxides, c) truxene molecule with electroactive components core and three functional groups, d) examples of programmatically-generated asphaltene components, e) 2D patchy particles designed to self-assemble terminal structures.]{a) Coarse-grained DNA initialized directly from sequence of nucleobases using the model from \cite{Knotts2007}, b) Micelle self-assembly from a coarse-grained model of fullerene and their oxides, c) truxene molecule with electroactive components core and three functional groups, d) examples of programmatically-generated asphaltene components, e) 2D patchy particles designed to self-assemble terminal structures.}\label{fig:mbuild} %remember labels after caption, not before!
 \end{figure}
 
 By combining tools for particular applications, we create ``higher-level'' languages for describing the system initializations in these examples.

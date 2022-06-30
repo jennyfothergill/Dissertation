@@ -1,12 +1,18 @@
 \chapter{Introduction}
-
-Molecular simulation gives us the unique ability to peer into the equilibrium structure of atoms and molecules.
-The length scale and properties we observe depend on the technique.
-Using density functional theory, we can obtain the optimized ground state structure or we can look at the induced shifts in the electron density in the form of charges.
-Using molecular dynamics, we can sample the equilibrium structures of the thermodynamic ensemble. 
-Analysis techniques can be used to validate simulation results with experiment; for example, structural analysis techniques like grazing-incidence X-Ray scattering (GIXS) allow us to probe the periodic structure, while ultraviolet-visible (UV-Vis) absorption spectroscopy allows us to determine the quantum splitting induced in the molecular orbital energies.
-Even without direct comparison to experiment, comparing the relative energies of two different structures using the same model can inform us about which structure is more stable, and the charges on various atoms can help us determine which interactions stabilize that structure.
-Comparing the results obtained using different models or engines can inform us of the robustness of reproducibility of our method.
+%By taking the time to make the scientific work you do reproducible and accessible, you increase its potential impact on society.
+Molecular simulations give us the  ability to predict the structures of molecules and materials through models of atomic interactions.   
+Predicting structure is invaluable to engineers because atomic structure determines the mechanical, electrical, chemical, and optical properties of a molecule or material, and therefore how it may be applied to applications in energy generation, sensing, quantum computing, or medicine. 
+Realizing the potential of molecular simulations to inform and transform materials science and engineering is held back by theoretical and practical limitations to the library of simulation techniques.
+%Depending on which simulation technique is applied, different length scales and properties are accessible.
+At the smallest length scales, using density functional theory (DFT), it is possible to obtain the optimized ground state structure and predict induced shifts in the electron density in the form of charges.
+The poor computational scaling of DFT, however, places theoretical limits on the number of atoms whose structure can be predicted with today's common computer architectures.
+Molecular dynamics (MD) simulations that sample equilibrium structures of thermodynamic ensembles expand the length scales and time scales that are accessible to molecular simulations, with the trade-off of simplifying assumptions about how atoms interact.
+The $O(N^2)$ scaling of force calculations in MD simulations is better than the $O(N_e^3)$ scaling of some DFT techniques (doubling the number of atoms $N$ makes the computational effort of advancing one ``step'' 4x harder in MD, versus a factor 8x harder when doubling the number of electrons $N_e$ in DFT), but this polynomial scaling still places practical limits of a few million simulation elements (atoms, or bodies representing multiple atoms) using modern supercomputers. 
+%Analysis techniques can be used to validate simulation results with experiment; for example, structural analysis techniques like grazing-incidence X-Ray scattering (GIXS) allow us to probe structural periodicities, while ultraviolet-visible (UV-Vis) absorption spectroscopy allows us to determine the quantum splitting induced in the molecular orbital energies.
+%Even without direct comparison to experiment, comparing the relative energies of two different structures using the same model can inform us about which structure is more stable, and the charges on various atoms can help us determine which interactions stabilize that structure.
+%Comparing the results obtained using different models or engines can inform us of the robustness of reproducibility of our method.
+In addition to these theoretical limits, the practical difficulties of coding simulation software, creating input files, running simulations, and performing analysis are barriers to correctness and ultimately the utility of molecular simulations. 
+In this work we study and improve practical aspects of performing molecular simulations with the aim of making simulations more accessible, reproducible, and ultimately more impactful to society.
 
 The circular scientific process, consisting of observation, hypothesis, experiment, analysis, and conclusion, often neglects to emphasize a vital extra step which is review and reproduction of the results. 
 A Nature study from 2016 found that more than 70\% of researchers had tried and failed to reproduce another scientist’s experiments---over half had failed to reproduce their own past work \cite{Baker2016}.
@@ -60,17 +66,22 @@ In addition to documentation to help users get the code running, developers can 
 Providing the exact names and versions of software aids reproducibility; however, providing containers or virtual machines which contain the exact software stack is even better. This saves users the hassle of installation and prevents opportunities for version mismatching \cite{Cito2016, Shirts2008a}.
 These tools may add to the cognitive load of a computational scientist, but ultimately they make the code they develop more useable by the community.
 
-By providing adequate training upfront, new scientists can feel more prepared to be part of the open source science community.
-Training, inclusivity, and collaboration benefit the software development community \cite{Jankowski2019}.
+By providing adequate training upfront and introduction to commonly used tools, new scientists can feel more prepared to be part of the open source science community.
+Training, inclusivity, and collaboration benefit the software development community and recently open source molecular simulation codes have seen an influx in contributors\cite{Jankowski2019}.
+This increase in eyes on the code helps to find bugs, discover new use cases, and make the code more usable to people from diverse backgrounds, but it all relies on scientists being willing to share their code.
 One reason that scientists may not share their code because they view it as unfinished or messy and don't have time to prepare it for publication or worry about being judged \cite{Irving2016}.
 Some scientists may worry that by sharing their work openly, their discoveries will be scooped, but using version control can not only help scientist to track their work but as it provides a signed and timestamped commit---it can be used to prove priority \cite{Blischak2016}. 
-But collaboration and participation in a community is vital to helping make sure that computational science is reproducible. 
-Community, not prestige, matters to open-source developers \cite{Smirnova2022}.
-And there are many simple ways to help newcomers feel welcome from having public contributing guides and codes of conduct to promptly responding to and acknowledging their contributions \cite{Sholler2019}.
+Participation in the open source software development community helps scientists find communities which share the same struggles and can help provide solutions.
+It has been posed that community, not prestige, matters to open-source developers \cite{Smirnova2022}.
+By providing newcomers with public contributing guides, codes of conduct, prompt respectful responses to their questions, and acknowledgement of their contributions \cite{Sholler2019}, we can help to make this community more welcoming and accessible.
+Collaboration and participation in a community is vital to helping make sure that computational science is reproducible. 
 
 Additionally, reproducibility can be aided by not only sharing the source code but also the unedited raw data and analysis methods \cite{Miyakawa2020}. 
 By having the complete process---from data collection, to analysis, and even figure creation---be completely automated, transparent, and open, computational results can be the most reproducible and useful to other researchers and society as a whole \cite{Taylor2019, Donoho2009}.
-The principles which make computational research transparent, reproducible, useable by others, and extensible (TRUE) \cite{Thompson2020}.
+These principles help make computational research transparent, reproducible, useable by others, and extensible (TRUE) \cite{Thompson2020}.
+TRUE principles don't necessarily guarantee that the results are correct, but instead ensure results are reported in a way that facilitates replication and testing by readers and reviews.
+Reporting work according to the TRUE principles supports correctness by allowing subsequent works to more easy scrutinize the results obtained using the exact code used to obtain them.
+When code is provided, many corrections can be found and addressed which ultimately adds to credibility and promise of molecular simulation \cite{superwater}.
 An area where transparency, reproducibility, useability, and extensibility is really brought to the forefront is in my experience developing scientific software with the Molecular Simulation and Design Framework (MoSDeF) team.
 I have contributed to the development of open-source packages including \texttt{mBuild}, \texttt{Foyer}, \texttt{Signac}, \texttt{Fresnel}, and \texttt{HOOMD} \cite{mbuild, foyer, signac, fresnel, hoomd}.
 These contributions have given me ample opportunity to exercise best software development practices such as writing documentation, using version control, developing unit tests, employing continuous integration (CI), using a fork \& pull workflow, etc.
@@ -86,40 +97,42 @@ Broadly, my research has used molecular simulation to determine the morphology o
 Learning the intricacies and struggles and what matters to each simulation and how to disseminate and visualize these results.
 I then have used various analysis methods to validate these simulated morphologies with those observed in experiment. 
 Along the way, I have found my passion in helping to make computational sciences more accessible and reproducible.
-My work has focused on developing and using computational tools and workflows to predict and understand self assembly of electronically active molecules.
+There is so much for a new molecular simulator to learn: When entering the field, these scientists must train on the underlying theories (e.g., statistical mechanics, thermodynamics, quantum mechanics, etc) and the specifics of their materials system (e.g., polymers, organic photovoltaics, etc) all while navigating the computational ecosystem (e.g., git, compilers, paths, the terminal, clusters, python, etc).
+With all this cognitive overhead to consider, it makes sense that scientists cobble together what they can in order to run their experiment; they may not feel they have the time to learn best practices or they may not be aware these best practices even exist!
+My work has focused on developing and using computational tools and workflows to predict and understand self assembly of electronically active molecules with a focus on making these tool usable by others and demonstrating best practices following TRUE principles.
 The resulting four journal publications, two in-preparation manuscripts, two posters, and one conference presentation span all scales from first-principles calculation of electronically active dimers to the creation of new tools for analyzing the long-range periodicities of large scale atomistic and coarse-grain (CG) simulations.
 
-In this thesis I describe projects in which I was both the lead code developer as well as projects where I needed to learn existing code to run  experiments.
+In this thesis I describe projects in which I was both the lead code developer as well as projects where I needed to learn existing code to run experiments.
 An additional focus of this thesis is the work that I have done to make the codebases I have contributed to TRUE in the hopes that they will serve others after I leave.
 
 In my first publication on dimer formation, an investigation of the excitonic splitting observed in cyanine dye dimers was done using density functional theory (DFT) \cite{Fothergill2018}.
 By comparing calculated with experimental absorption spectra it was found that the solvent may play a large role in the dimer formation and peak shifting.
-At this time I wrote some python code which used singular value decomposition to fit the mostly-planar dye molecules to a vector and a plane. 
-I showed a graphic for how this was done in the SI, but did not include any code or any details of what software versions I used. 
-The method is not theoretically complex and if I recall correctly I used a function from the \texttt{Scipy} library, but this work would have been more reproducible had the exact code and its dependencies been provided in the supporting information (SI).
-At the time, however I was not aware of version control using git or GitHub and instead used Dropbox's history.
-I did my best to report all details for the computations I performed although they were done in a proprietary package (Gaussian09), so the source code is not available.
-Along with the SI, PDB files for all DFT optimized structures were included, but I did not provide any of the raw input or output files used by Gaussian, nor did I report how I converted these structures to PDB.
-Another bespoke code used in the publication, referred to as the KRM code, was developed in Java by Dr Yurke and its theory is given in \citet[Supporting Information]{Cannon2017}, but to my knowledge the source code is not publicly available or under version control, so I could not report its version or give instructions for how this work could be reproduced.
-This critique of my past work is by no means a condemnation of it; my effort and the guidance I received from my collaborators were an invaluable learning experience.
-Learning to use git and GitHub is an initial barrier which adds to cognitive load---a novice computational scientist needs to learn the theory and background of their method, how to navigate the shell, how to use a new software, and perhaps a scripting language, so although using version control is a vital part of writing reproducible scientific code, initially learning how to use it may seem like an unwanted additional hurdle.
-I was also somewhat ignorant of what details I should report---at the time I don't think I knew how to determine what version of python or java or which additional libraries I was using.
 I performed all simulations under the guidance of Drs. Li and Yurke, created all figures, and wrote all stages of draft this paper with review feedback from Dr Li, Dr Knowlton, and Dr. Yurke.
 
 In my second publication, an investigation of the supramolecular interactions which guide crystal self-assembly in diphenylurea transition metal complexes was done using DFT \cite{Millard2019a}.
 I contributed DFT energies and optimized structures under the guidance of Dr King.
 
-My contribution to the lab's perspective paper was mostly about my on-boarding experience trying to reproduce an existing model; a task which should be very straightforward but, which any computational scientist can attest, is far from simple \cite{Jankowski2019}.
-
-In my first poster contribution as Boise State University's 2020 Research Computing days, I presented a tool called GIXStapose, an interactive structure viewer alongside its simulated diffraction pattern \cite{gixstapose}. And this work was also presented at the 2020 SciPy conference \cite{gixstapose, scipy2020}.
-
 My third publication was a thorough investigation of the effect of para-substituents to the crystal structure of diphenylurea molecules. I contributed DFT calculations, data analysis, writing in the initial draft, and images made in Figures 3, 4, 5, 6, and 8 \cite{Fothergill2021}.
 
-In a talk given at the 2021 American Institute of Chemical Engineers conference, I presented how MoSDeF tools can be used to update an older workflow, making it more TRUE. 
-I will elaborate on that workflow and its use to validate that the structures self-assembled by P3HT show the same structures and temperature and solvent dependency as in prior work using a different model.
+My contribution to the lab's perspective paper was mostly about my on-boarding experience trying to reproduce an existing model; a task which should be very straightforward but, which any computational scientist can attest, is far from simple \cite{Jankowski2019}.
 
-Finally, I will summarize my currently unpublished effort in a multi-university collaborative study to use MoSDeF tools reproducibly.
+These published works are included in the appendices for readers with interest in these topics. As my current research focuses on developing TRUE workflows, two chapters are presented which highlight my software development efforts.
 
-Through my work spanning all scales of molecular simulation---from implementing details in MD engines, to creating analysis software, to performing DFT calculations of single molecules, simulations of collections of molecules, and performing thousands of  simulations of collections of molecules across thermodynamic state space---the need and utility of  pipelines and practices emphasizing transferability, reproducibility, useability, and extensibility has only been reinforced.
+\autoref{chap:p3ht_validation} will detail validation of an updated workflow to explore the state-space dependence of the ordering of poly-3-hexylthiophene (P3HT) polymer. 
+This workflow was highlighted in a talk given at the 2021 American Institute of Chemical Engineers conference. 
+And one of the tools used in the workflow, GIXStapose, was also presented in my first poster contribution as Boise State University's 2020 Research Computing days and at the 2020 SciPy conference \cite{gixstapose, scipy2020}. 
+The original work this workflow validated was transparent in that it freely distributed all it's source material, from raw data to all scripts used for processing.
+The original workflow was also reproducible in that the software stack was documented and if necessary it could be recreated and rerun.
+I added improvements to this workflow by making it even easier to install by using and distributing a Docker container with the full software stack, making it more usable by others by creating modular packages with full documentation and tutorials, and more extensible by generalizing the workflow to accept any molecule as input.
+This chapter demonstrates what a TRUE workflow can look like, and how tools can be designed according to TRUE principles.
+
+\autoref{chap:reproducibility} will summarize my effort in a multi-university collaborative study to use MoSDeF tools reproducibly which is in preparation. 
+This study follows in the footsteps of other studies which compare the result of analogous methods across different engines in hopes of validating method implementation\citep{Shirts2017, Loeffler2018, Schappals2017}. 
+This study demonstrates the hurdles to achieve reproducible results between different people using different engines, and the power of collaboration and community to tackle large problems.
+My contribution to this study include creation of all scripts needed to run MD simulations using HOOMD including implementation of a new method for tail correction and fixing all bugs found along the way. 
+
+Through my work spanning all scales of molecular simulation---from implementing details in MD engines, to creating analysis software, to performing DFT calculations of single molecules, simulations of collections of molecules, and performing thousands of simulations of collections of molecules across thermodynamic state space---the need and utility of pipelines and practices emphasizing transferability, reproducibility, useability, and extensibility has only been reinforced.
+The result of my work has been the validation of the general amber forcefield (GAFF) and an updated workflow for use with P3HT, the creation of extensible tools for mapping between coarse and atomistic representations, the development of tools for reproducibly analyzing structure and diffraction patterns, and the creation and comparison of methods within the HOOMD engine.
+
 
 %% what can reproducibility look like in molecular simulation

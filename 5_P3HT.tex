@@ -22,7 +22,7 @@ OPV devices, however, still have a lot of room for improvement, and recent incre
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/NREL2020.pdf}
-    \caption{Comparison of efficiencies in organic and silicon photovoltaic technologies from 1990 to present. The current state-of-the-art OPV, a mixed polymer, small molecule, and fullerene device, achieves 18.2\% efficiency \cite{Zhang2021}. Data taken from~\citet{NREL2020}.}\label{nrel}
+    \caption[Comparison of efficiencies in organic and silicon photovoltaic technologies from 1990 to present. The current state-of-the-art OPV, a mixed polymer, small molecule, and fullerene device, achieves 18.2\% efficiency. Data taken from National Renewable Energy Laboratory U.S. Department of Energy.]{Comparison of efficiencies in organic and silicon photovoltaic technologies from 1990 to present. The current state-of-the-art OPV, a mixed polymer, small molecule, and fullerene device, achieves 18.2\% efficiency \cite{Zhang2021}. Data taken from~\citet{NREL2020}.}\label{nrel}
 \end{figure}
 The potential of OPVs to achieve higher power conversion efficiencies depends on the morphology of the active layer. 
 Molecular simulation can help to predict the combinations of donor and acceptor which will robustly self-assemble into a morphology best able to transport charge. 
@@ -44,7 +44,7 @@ These hundreds of simulations at different statepoints were organized using cust
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/miller2018_figs.png}
-    \caption{(\textbf{a}) The degree of ordering, $\Psi$, at various temperatures and solvent parameters taken from Ref.~\citet{Miller2018}. (\textbf{b}) The three largest clusters (colored blue, red, and yellow in order of descending size) in a P3HT morphology taken from Ref.~\citet{Miller2018}.}\label{fig:miller18}
+    \caption[\textbf{a}) The degree of ordering, $\Psi$, at various temperatures and solvent parameters taken from Ref. Miller et al. (\textbf{b}) The three largest clusters (colored blue, red, and yellow in order of descending size) in a P3HT morphology taken from Ref. Miller et al.]{(\textbf{a}) The degree of ordering, $\Psi$, at various temperatures and solvent parameters taken from Ref.~\citet{Miller2018}. (\textbf{b}) The three largest clusters (colored blue, red, and yellow in order of descending size) in a P3HT morphology taken from Ref.~\citet{Miller2018}.}\label{fig:miller18}
 \end{figure}
 \autoref{fig:miller18}a helps us to visualize the temperature and solvent parameter state space.
 In order to aid the analysis of this state space, the order parameter ($\Psi$) was defined as the ratio of thiophene moeities in "large" clusters.
@@ -118,7 +118,7 @@ The initial velocities and angular momenta are randomly assigned from the Maxwel
 By having our entire process scripted, we can have everything about our process documented and available for scrutiny and reduce the potential human error inherent when switching between codes or transferring files.
 Through \texttt{PlanckTon-flow}, this tool is supported by the \texttt{signac} framework, which handles the parameter space initialization and management and submission to various computing clusters. Because this workspace is created using \texttt{signac}, \texttt{signac} can be used to navigate it. This allows to reference our data via the statepoint (e.g., what temperature and $\epsilon_{s}$ it was run at) without ever having to create or manage a complicated directory structure or naming scheme.
 
-\texttt{PlanckTon} was started by my lab mates Mike, Evan, and Matty, and I have assumed responsibility for its development including:
+\texttt{PlanckTon} was started by my labmates Mike Henry, Evan Miller, and Matty Jones\cite{Jankowski2019, planckton}, and I have assumed responsibility for its development including:
 Updating to \texttt{HOOMD} version 2 allowed us to use the \texttt{HOOMD} simulation initialization functions in \texttt{mBuild}. This allows the package to be more modular and useable by others; any improvements or bugfixes needed in the \lstinline{create_hoomd_simulation} function can be contributed back to \texttt{mBuild}, which allows the whole community to benefit.
 Adding automated docker container builds.
 Generalizing the initialization procedure to allow starting compounds to be loaded from SMILES strings or any input file and these untyped compounds can be typed on the fly using any \texttt{foyer} compatible forcefield.
@@ -155,7 +155,7 @@ I developed GIXStapose as wrapper for the diffractometer package and the fresnel
 GIXStapose works by translating the structural information in many chemical input files into the formats needed by these two packages, and in the process can link rotations of the real space image to its diffraction pattern. 
 The camera information used to generate the real space rendering and the diffraction pattern can be accessed and saved, allowing users to recreate the exact figure.
 The package has an interactive graphical user interface (GUI), but is completely modular and can be run in a scripted fashion to generate reproducible figures and diffraction patterns along with translation of units. 
-This work was presented at Scipy2020 \cite{gixstapose-scipy}. 
+This work was presented at Scipy2020 \cite{scipy2020}. 
 
 \section{Methods}
 \subsection{Generate simulation data}
@@ -174,7 +174,7 @@ With the updates made to this workflow, first let's check that we get quantitati
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/Miller2018_fig3comparison.png}
-    \caption{The degree of ordering, $\psi$, of P3HT at various solvent qualities, $\epsilon_{s}$, and temperatures. Red regions denote high order, blue regions are disordered. Each black "x" indicates a measurement, values between are interpolated. Part a is taken from \citet[Figure 3a]{Miller2018} and has been cropped and scaled to focus on the region of interest and make the plot bounds closer in value. Part b was created using the order parameter value from each simulation trajectory and the RectBivariateSpline interpolation function from the Scipy library. The final z values were adjusted such that no order parameter was greater than 1 or less than 0.}\label{fig:order}
+    \caption[The degree of ordering, $\psi$, of P3HT at various solvent qualities, $\epsilon_{s}$, and temperatures. Red regions denote high order, blue regions are disordered. Each black "x" indicates a measurement, values between are interpolated. Part a is taken from [Ref. Miller et al. Figure 3a and has been cropped and scaled to focus on the region of interest and make the plot bounds closer in value. Part b was created using the order parameter value from each simulation trajectory and the RectBivariateSpline interpolation function from the Scipy library. The final z values were adjusted such that no order parameter was greater than 1 or less than 0.]{The degree of ordering, $\psi$, of P3HT at various solvent qualities, $\epsilon_{s}$, and temperatures. Red regions denote high order, blue regions are disordered. Each black "x" indicates a measurement, values between are interpolated. Part a is taken from \citet[Figure 3a]{Miller2018} and has been cropped and scaled to focus on the region of interest and make the plot bounds closer in value. Part b was created using the order parameter value from each simulation trajectory and the RectBivariateSpline interpolation function from the Scipy library. The final z values were adjusted such that no order parameter was greater than 1 or less than 0.}\label{fig:order}
 \end{figure}
 \autoref{fig:order} shows good qualitative agreement between the previous findings of \citet{Miller2018} and the order parameter trends found in this work. The absolute value of the order parameters seen in this work are, in general, higher than those observed by \citet{Miller2018}. This may be due to the initial high temperature shrink period used in this work which is similar to Protocol 2 in \citet{Miller2018} which was shown to achieve faster equilibration and more robust ordering.
 
@@ -182,7 +182,7 @@ Next the high order regions were further examined using GIXS analysis (see \auto
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/Miller2018_fig6comparison.png}
-    \caption{Diffraction patterns of P3HT from (a) experimental GIXS of neat P3HT \cite{Ko2012}, (b) simulated GIXS \citep{Miller2018}, and (c) this work. Part c was generated in GIXStapose using thiophene centers found using GRiTS from the simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K.}\label{fig:highorder-dp}
+    \caption[Diffraction patterns of P3HT from (a) experimental GIXS of neat P3HT, (b) simulated GIXS, and (c) this work. Part c was generated in GIXStapose using thiophene centers found using GRiTS from the simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K.]{Diffraction patterns of P3HT from (a) experimental GIXS of neat P3HT \cite{Ko2012}, (b) simulated GIXS \citep{Miller2018}, and (c) this work. Part c was generated in GIXStapose using thiophene centers found using GRiTS from the simulation trajectory ran at $\epsilon_{s}$ 0.4 and T 251K.}\label{fig:highorder-dp}
 \end{figure}
 \autoref{fig:highorder-dp} shows good quantitative agreement between this work, experiment, and previous work. This also shows that high order parameter is a good predictor of clear GIXS peaks.
 The GIXS data in \autoref{fig:highorder-dp}c is noisier because was generated using a very small system (1,600 points vs 15,000 points in part b). However, even in spite of this, it is clear that qualitatively the same structural features seen in previous works and experiment are present. 
