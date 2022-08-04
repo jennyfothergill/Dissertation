@@ -60,10 +60,11 @@
 \usepackage[Export]{adjustbox} % Used to constrain images to a maximum size
 \adjustboxset{max size={0.9\linewidth}{0.9\paperheight}}
 
+\usepackage[hyphens]{url}
 % The hyperref package gives us a pdf with properly built
 % internal navigation ('pdf bookmarks' for the table of contents,
 % internal cross-reference links, web links for URLs, etc.)
-%\usepackage{hyperref}
+\usepackage{hyperref}
 % The default LaTeX title has an obnoxious amount of whitespace. By default,
 % titling removes some of it. It also provides customization options.
 \usepackage{titling}
@@ -166,6 +167,8 @@
       urlcolor=urlcolor,
       hidelinks
       }
+      
+\usepackage[nameinlink]{cleveref}
 
 \usepackage{textcase}
 %------------------------------------------------------------------------------
@@ -315,7 +318,7 @@ BOISE STATE UNIVERSITY GRADUATE COLLEGE\\
 \vspace{\baselineskip}
 \textbf{DEFENSE COMMITTEE AND FINAL READING APPROVALS}\\
 \vspace{\baselineskip}
-of the thesis submitted by\\
+of the dissertation submitted by\\
 \vspace{\baselineskip}
 {\@author}\\
 \vspace{\baselineskip}
@@ -325,7 +328,7 @@ of the thesis submitted by\\
 
 \begin{singlespace}
 \begin{tabularx}{\textwidth}{@{}lX} 
-Thesis Title: & {\@title}
+Dissertation Title: & {\@title}
 \end{tabularx}
 \end{singlespace}
 
@@ -349,7 +352,7 @@ Date of Final Oral Examination: & {\@oralexamdate}
 \end{flushleft}
 
 \begin{singlespace}
-\noindent The final reading approval of the thesis was granted by {\@advisorname} {\@advisortitle}, Chair of the Supervisory Committee. The thesis was approved by the Graduate College.
+\noindent The final reading approval of the dissertation was granted by {\@advisorname} {\@advisortitle}, Chair of the Supervisory Committee. The dissertation was approved by the Graduate College.
 \end{singlespace}
 
 \thispagestyle{empty}

@@ -1,7 +1,7 @@
 \chapter{Validating state space screening calculations, a P3HT case study}
 \label{chap:p3ht_validation}
 
-The following chapter contains unpublished work written by me with guidance from Dr. Jankowski.
+The following chapter contains yet to be published work written by me with guidance from Dr. Jankowski.
 
 A Jupyter notebook demonstrating the tools mentioned in this chapter can be found in \autoref{app:p3ht_nb}, and a Zenodo dataset containing all data used in this chapter can be found at Ref.~\citet{Fothergill2022}.
 
@@ -31,7 +31,7 @@ A complication of the simulation of OPV polymers is that the properties which pr
 In order to model charge movement through a device, we need to know the position of individual atoms in order to discern the electronic environment and thus the likelihood of a charge hop, but we also need a bulk structure large enough that we can observe morphological features like the interdigitation of polymer lamellae to compare these morphologies to experiment.
 But atomic resolution at length scales of hundreds of nanometers becomes computationally expensive, so simulating larger morphologies necessitates a simplified model.
 By simplifying our model using coarse-graining techniques where multiple atoms are represented as a single bead we can more efficiently equilibrate larger length scales.
-In additional to using a simplified model, the statepoint variables (including temperature, density, and solvent) must be carefully tuned to find the conditions under which the OPV morphology has the best self-assembly. 
+In addition to using a simplified model, the statepoint variables (including temperature, density, and solvent) must be carefully tuned to find the conditions under which the OPV morphology has the best self-assembly. 
 Choosing a model and statepoint are some of the important choices a simulator must make when simulating OPV polymers. 
 These choices should be informed by data, which increases the scope of this problem.
 This chapter will discuss a previous work which laid the groundwork for making these choices using poly-3-hexylthiophene (P3HT), and the current work which aims to reproduce this work with improvements to the underlying tools which make them more transparent, reproducible, usable, and extensible (TRUE) \citep{Thompson2020}.
@@ -63,8 +63,8 @@ It must be able to create and manage a large parameter space, move data between 
 Much of my work in the lab has been to design tools which makes these tasks more transferable, reproducible, usable, and extensible (TRUE) \citep{Thompson2020}.
 Transferable means the code is general enough to be used in different ways or applied to different problems.
 Reproducible means enough information is provided that the work can be redone and no important details regarding the process are obscured.
-Useable by others means that other people---especially people outside your circle---can actually use this tool. This entails that not only is the source code is freely available and easy to install but also that users can understand how to use it without too much cognitive overhead. This can be helped with permissive, open licensing, dependency documentation and packaging (including containers), and thorough documentation and examples.
-Extensible mean that others can build upon the work you have done.
+Useable by others means that other people---especially people outside your circle---can actually use this tool. This entails that not only is the source code freely available and easy to install but also that users can understand how to use it without too much cognitive overhead. This can be helped with permissive, open licensing, dependency documentation and packaging (including containers), and thorough documentation and examples.
+Extensible means that others can build upon the work you have done.
 If this project is going to have the desired impact (i.e., using molecular simulation to identify novel OPVs), every step of the process and the resulting data must be straightforward to reproduce and validate.
 The nature of a multiscale simulation requires translation between formats and units and accurate handling of large data, and thus requires infrastructure to reduce error.
 Although the molecular and computational scope of this project is broad, by using and building upon existing architectures and adhering to recent guidelines in the computational sciences community we can manage the multiscale nature of this project and contribute to reproducible science.
@@ -160,7 +160,7 @@ This work was presented at Scipy2020 \cite{scipy2020}.
 \section{Methods}
 \subsection{Generate simulation data}
 A \texttt{PlanckTon-flow} workspace of 40 simulations defined by their temperature and solvent parameter ($\epsilon_{s}$) was initialized. Each system comprised of 100 united-atom (UA) P3HT 16-mers parameterized with GAFF. %(The compound can be found in planckton as "P3HT-16-gaff" and the forcefield is "gaff-custom".) 
-All nonbonded forces used a cutoff value of 8.91 \AA~ (2.5 times the largest sigma value). The target density for all was 0.56 $\frac{g}{cm^{3}}$. All simulations used a timestep of 2 fs and started by shrinking the box from 125 times the the target volume to the target volume (789 nm$^3$) at 629 K, with a thermostat coupling value (tau) of 2 ps, run over 0.2 ns. Once the shrink step was finished, each simulation was run at its own combination of temperature and $\epsilon_{s}$ ranging from 125, 188 to 629 K and 0.2 to 1.0, respectively. These runs used a thermostat coupling value (tau) of 0.6 ps and were run for 200 ns. All were run in the \lstinline{cmelab/planckton_gpu:v0.6.1} docker container.
+All nonbonded forces used a cutoff value of 8.91 \AA~ (2.5 times the largest sigma value). The target density for all was 0.56 $\frac{g}{cm^{3}}$. All simulations used a timestep of 2 fs and started by shrinking the box from 125 times the target volume to the target volume (789 nm$^3$) at 629 K, with a thermostat coupling value (tau) of 2 ps, run over 0.2 ns. Once the shrink step was finished, each simulation was run at its own combination of temperature and $\epsilon_{s}$ ranging from 125, 188 to 629 K and 0.2 to 1.0, respectively. These runs used a thermostat coupling value (tau) of 0.6 ps and were run for 200 ns. All were run in the \lstinline{cmelab/planckton_gpu:v0.6.1} docker container.
 
 \subsection{Create coarse grain mapping}
 The GRiTS \lstinline{CG_System} class was used to find indices of atoms in thiophenes using SMARTS string ``c1cscc1'' and inferred hydrogens. This created a new coarse-grain trajectory file with beads at thiophene centers and a json file which contains the SMARTS string which generates the mapping and the atom indices in the atomistic trajectory as a key value pair.
@@ -200,7 +200,7 @@ Using all particles in the united-atom thiophene may result in easier to see spo
     \includegraphics[width=0.8\linewidth]{figures/p3ht_val/ua_vs_cg_dp.png}
     \caption{Diffraction patterns of P3HT using (\textbf{a}) all thiophene particles in the UA trajectory (\textbf{b}) thiophene centers found using GRiTS. Both patterns were generated using GIXStapose at the same camera angle on the simulation trajectory run at $\epsilon_{s}$ 0.4 and T 251K.}\label{fig:ua-vs-cg-dp}
 \end{figure}
-Although coarse-graining may provide clarity with much larger or less ordered structures, in this very small ordered system, the peaks are more easily visible in the when all the thiophene particles are used in diffraction.
+Although coarse-graining may provide clarity with much larger or less ordered structures, in this very small ordered system, the peaks are more easily visible when all the thiophene particles are used in diffraction.
 
 As \autoref{fig:highorder-dp}c was generated using GIXStapose, we can examine the real space structure from the exact viewing angle the diffraction pattern was generated from. 
 \begin{figure}
@@ -243,7 +243,7 @@ By using and building on existing code, we work with a community of open-source 
 
 The ultimate success of this project to me is if someone else can use it. 
 And in order to achieve that goal, I have tried to develop code with the next user in mind.
-I know it can be daunting to be handed someone else code. 
+I know it can be daunting to be handed someone else's code. 
 If the only way to learn how to use it is to read through the code comments (or just the code itself) and try to figure it out, users may prefer to simply write their own. 
 Even when good user documentation is provided, often these bespoke codebases have specific dependencies which may not be continuously maintained so they break in updated installations.
 We can consider the effort put in to providing containers with the complete functioning software stack and writing thoughtful user documentation and examples as a force multiplier. 

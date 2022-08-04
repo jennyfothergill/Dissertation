@@ -1,7 +1,7 @@
 \chapter{Reproducibility study}
 \label{chap:reproducibility}
 
-The following chapter describes a yet to be published collaboration in with manuscript in preparation.
+The following chapter describes a yet to be published collaboration with manuscript in preparation.
 My contribution to this project was preparing the scripts to run the HOOMD simulations, writing documentation for the project, and involvement in numerous group discussions. 
 This study brought to light many many issues which instigated many updates and improvements to the various codes used in the study.
 Scientific software improvements I am responsible for as a result of this study include:
@@ -26,12 +26,14 @@ Many codes for performing these methods exist each with their own algorithms and
 This study aims to learn whether different codes can get the same result using the same model.
 Within the umbrella of model is the thermodynamic ensemble (e.g., NVT, NPT), the representation of the system (e.g., the force field, constraints, cutoffs), and the statepoint (i.e., the pressure, temperature).
 In this framework, a "force field" is defined to supply the parameters for a given model.
-Other details related to the model: rigid, long-range and charged interactions.
+Other details related to the model are rigid representation and long-range and charged interactions.
 
-Using the same forcefield may not ensure reproducibility between engines: different engines lack consistency in the functional forms, implementations, and options for handling long-range and charged interactions \citep{Rizzi2020}. 
-The energy calculated with a certain code has been found to depend on how the charges are calculated (whether the charge method uses the whole molecule or fragment) and which method is used is often not reported---even differences in Coulomb's constant may cause different results \citep{Shirts2017}.
+In computational molecular simulation, already many hurdles to achieving simulation reproducibility have been reported. 
+Using the same method, ensemble, and forcefield may not ensure reproducibility between engines, as different engines lack consistency in the functional forms, implementations, and options for handling long-range and charged interactions \citep{Rizzi2020}. 
+The energy calculated with certain codes has been found to depend on how the charges are calculated (whether the charge method uses the whole molecule or fragment) and which charge calculation method is used is often not reported---even differences in Coulomb's constant may cause different results \citep{Shirts2017}.
 Due to differences in available implementations in the difference engines there is no one size fits all protocol \citep{Loeffler2018}.
 Systematic error was found between engines in as simple a task as calculating the potential energy and density of uncharged molecules in the liquid phase, even between groups using the same engine \citep{Schappals2017}.
+Although these hurdles may seem discouraging and lead some to disregard simulation entirely, I would argue that instead this is a challenge that be met by the community using TRUE principles.
 
 This study, a multi-university collaboration, aims to determine what information is necessary to achieve statistically same results across engines.
 Researchers from eight universities (see \autoref{tab:unis}) contributed to scripts to initialize and run each of these systems.
@@ -67,11 +69,11 @@ These scripts will use tools from the Molecular Simulation and Design Framework 
 In order to help manage this large data space and submission to various clusters, the \texttt{signac} framework will be used to programmatically organize the statepoint directories and handle the idiosyncrasies of different cluster schedulers.
 This study is still ongoing, so some of the data shown in this chapter may be unfinished or incomplete. 
 I will focus most on the simulations run using HOOMD, as this is the part of the study I am responsible for.
-I will also try to distill what we have learned, through the numerous hurdles we have discovered and overcome. 
+I will also try to distill what we have learned, through the numerous issues we have discovered and overcome. 
 This project involved a great deal of collaboration and discussion.
 Although the systems studied are very simple, we ran into many challenges:
-Keeping consistent units, sharing data, and many unexpected hurdles to get consistency between engines due to the different available functions in each engine. % wording?
-Choosing what information to store and how to format that information so it is readable by one analysis script. 
+Keeping consistent units, sharing data, and overcoming the many unexpected hurdles to get consistency between engines due to the different available functions in each engine. % wording?
+In addition, choosing what information to store and how to format that information so it is readable by one analysis script was challenging between multiple engines because not all engines were able to report the same values.
 The benefit of this study is that it provides comprehensive information: the results obtained and the exact code ran to obtain them. 
 These data can be used by other simulators to validate their work.
 These workflows can also serve as valuable examples. 
@@ -104,7 +106,7 @@ The non-bonded TraPPE-UA potential parameters used for benzene can be found in \
 
 The scope of this project meant that it required thoughtful organization: A total of sixty-nine statepoints each in sixteen replicates were distributed to eight different universities.
 Devising a custom organization scheme would've been time-consuming and potentially unreliable, so the parameter space was handled by the \texttt{signac} framework\cite{Adorf2018, signac_zenodo, signac_scipy_2018, signac_scipy_2021}.
-\texttt{signac} is a tool designed for managing dynamic data spaces in a well-defined, indexable way.
+\texttt{Signac} is a tool designed for managing dynamic data spaces in a well-defined, indexable way.
 The study is formatted as a \texttt{signac} project, so all code---from system initialization to project analysis for all engines---is contained in a single repository, and access to the data, or "job", can be done using the statepoint parameters.
 
 The workflow for the HOOMD simulations in shown in \autoref{fig:rep_workflow}; each engine will have similar although perhaps not identical workflows.
@@ -113,26 +115,29 @@ The workflow for the HOOMD simulations in shown in \autoref{fig:rep_workflow}; e
     \includegraphics[width=\linewidth,keepaspectratio]{figures/rep_study/reproducibility_workflow.png}
     \caption{Workflow for HOOMD simulations in the reproducibility study.}\label{fig:rep_workflow}
 \end{figure}
-First the statepoint data is used to define the job: The statepoint definition consists of the molecule being simulated, the temperature and pressure at which the simulation is run, the simulation ensemble, the number of molecules (N), the side length of the cubic box, the target density, the molecule mass, the forcefield, including the cutoff style and cutoff distance ($r_{cut}$, and the engine used to simulate that statepoint. 
+First the statepoint data is used to define the job: The statepoint definition consists of the molecule being simulated, the temperature and pressure at which the simulation is run, the simulation ensemble, the number of molecules (N), the side length of the cubic box, the target density, the molecule mass, the forcefield, including the cutoff style and cutoff distance ($r_{cut}$), and the engine used to simulate that statepoint. 
 To provide adequate data for statistical analysis, 16 replicates were run at each statepoint.
-Then using the statepoint data, the system (including the starting structure, box, etc) is initialized programmatically.
-To ensure that all engines are starting with the same system, this process is generalized: All engines use the \lstinline{construct_system}, which wraps \texttt{mBuild}'s \lstinline{fill_box} to creates an \texttt{mBuild} \lstinline{Compound} object containing the simulation box at the specified density populated with the specified number of molecules, and \lstinline{load_ff}, which loads the correct \texttt{foyer} \lstinline{Forcefield} object from the forcefield name in the statepoint. 
-Then the forcefield is applied to the system box compound to generate a ParmEd structure\cite{Shirts2017}, where the atoms are typed according to the forcefield and and the relevant force parameters are also stored within the structure object. 
+Then using the statepoint data, the system (including the starting structure, box, etc.) is initialized programmatically.
+
+To ensure that all engines are starting with the same system, this process is generalized: All engines use the \lstinline{construct_system} function, which wraps \texttt{mBuild}'s \lstinline{fill_box} to creates an \texttt{mBuild} \lstinline{Compound} object containing the simulation box at the specified density populated with the specified number of molecules, and \lstinline{load_ff}, which loads the correct \texttt{foyer} \lstinline{Forcefield} object from the forcefield name in the statepoint. 
+Then the forcefield is applied to the system box compound to generate a ParmEd structure\cite{Shirts2017}, where the atoms are typed according to the forcefield and the relevant force parameters are also stored within the structure object. 
 From there each engine takes the parameterized ParmEd structure and converts it to the necessary input format. 
 For HOOMD this is done using the \lstinline{create_hoomd_forcefield} function in \texttt{mBuild}, which handles the unit scaling, initial snapshot creation, and neighborlist and force creation using the information stored in the ParmEd structure. 
 Some adjustments are made to the snapshot and forcefield after this to handle rigid bodies, constrained bonds, neighborlist exclusions, and long range correction. 
-The the simulation is initialized, the integrators, methods, and logging are set and the simulation can be run. 
+Then the simulation is initialized, the integrators, methods, and logging are set and the simulation can be run. 
+
 The first run step in this process is to run a brief shrink step to bring the system to the desired density. 
 The shrink step starts with the volume expanded by 8 times (each length of the target box is 2 times larger) then the box is shrunk in the NVT ensemble over 100 ps with a thermostat coupling value of 1 ps at the simulation temperature. 
 The NPT run is initialized from the final frame of the shrink trajectory and is run at high thermostat (1 ps) and barostat (5 ps) coupling values initially (for the first 1 ns) to prevent large fluctuations in the pressure and kinetic temperature and then they are lowered (to 0.1 ps and 1 ps, respectively) for the duration of the run. %(Initial tau=1000dt tauS=5000dt for 1e6 steps then tauS=1000dt tau=100dt for 5e6 steps.) 
 The NPT ensemble is run for a minimum of 6 ns, but after each NPT run, pymbar's \lstinline{detectEquilibration} and \lstinline{subsampleCorrelatedData} functions are used to check whether the volume has equilibrated and the desired number of decorrelated samples have been run \cite{Chodera2007, Chodera2016, Shirts2008a}. 
 A minimum of 100 independent samples at equilibrium were collected for each run, and this equilibration detection and subsampling is applied across all engines.
 By using a quantitative metric to achieve the same number of equilibrated, decorrelated samples, as opposed to deciding whether a simulation is equilibrated by eye or running for an arbitrary time, we aim to reduce user error in our sampling.
-(Plots of the evolution of potential energy over time for the simplest (UA methane) and the most complex system (AA ethanol) can be found in \autoref{fig:methane_pe_evolution} and \autoref{fig:ethanol_pe_evolution}.)
+Plots of the evolution of potential energy over time for the simplest (UA methane) and the most complex system (AA ethanol) can be found in \autoref{fig:methane_pe_evolution} and \autoref{fig:ethanol_pe_evolution}.
 If the volume has not equilibrated or the minimum number of independent samples have not been run, then the NPT simulation continues at the lower thermostat and barostat coupling values for an additional 5 ns. 
 If the volume has equilibrated, then the statistically independent samples of the equilibrated volume are averaged and this average is logged to the job document and the job moves to the NVT run. 
 The NVT run is initialized from the final frame of the NPT trajectory, but because this final frame may not be at the average volume, a short (20 ps) shrink period is done for the initial NVT run and then the simulation is run for 5 ns. 
 After the NVT run, the same equilibration detection is used---this time looking at the potential energy values. If the potential energy is equilibrated, the NVT run is finished, otherwise it is run again for an additional 5 ns from the last frame of the proceeding NVT run. 
+
 Finally the log file containing thermodynamic information written out by HOOMD is processed to remove any extra headers within the data from restarted jobs, the pressure and temperature are converted from simulation units into kPa and K, and the density values are calculated from the volume and logged.
 For each engine, the final step is to convert its log and trajectory files to a standard format and unit to allow analysis to run over all jobs.
 
@@ -156,7 +161,7 @@ PACKMOL uses an intrinsic random number generation method which is compiler depe
 The result is that PACKMOL creates different systems based on the operating system on which it was compiled.
 In general, simulators are interested in comparing a sampling of the equilibrium ensemble, which should not depend on the initial position.
 However, this discrepancy is important to note if one is trying to compare the energies of a single frame!
-For this reason, it is good practice to distribute the input structure along with the code used to generate it.
+For this reason, we could not rely on programmatically generated structures to compare the single point energies and it is good practice to distribute the input structure along with the code used to generate it.
 This starting system was then initialized following the same procedure as the NPT/NVT ensemble simulations, but the simulation was not allowed to progress in time allowing direct comparison of the energies between engines.
 
 Through the single point energy comparisons, it was determined that information about the 1-4 scaling and the combining rule were getting lost in the translation from \texttt{foyer} forcefield to ParmEd structure to engine input for Cassandra and Gromacs.
@@ -188,13 +193,13 @@ The period of the harmonic bond is given by
     T = \frac{2\pi}{\sqrt{\frac{k}{m}}}
 \end{equation}
 where k is the potential constant for the bond given in the forcefield and m is the mass of the particle.
-Initially, I was using a timestep of 0.001 (in simulation time units, ~1 fs) while the period of the harmonic bond (see \autoref{eq:harmonic_period}) was 0.0118 (in simulation time units, ~11 fs). \autoref{fig:harmonic_bond} illustrates the sensitivity of the harmonic bond sampled at different timesteps.
+Initially, I was using a timestep of 0.001 (in simulation time units, approximately 1 fs when converted to real units) while the period of the harmonic bond (see \autoref{eq:harmonic_period}) was 0.0118 (in simulation time units, approximately 11 fs). \autoref{fig:harmonic_bond} illustrates the sensitivity of the harmonic bond sampled at different timesteps.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/harmonic_bond.png}
     \caption{Demonstration of how choosing too large a timestep can lead to poor sampling of the position of atoms in a harmonic bond. Note the divergence from sinusoidal as dt increases. The dt values and the harmonic bond equation are accurate with the values given for the hydrogen bond.}\label{fig:harmonic_bond}
 \end{figure}
-By using a smaller timestep (0.0005 in simulation time units, ~0.5 fs), the temperature equilibrated to the correct value.
+By using a smaller timestep (0.0005 in simulation time units, approximately 0.5 fs), the temperature equilibrated to the correct value.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/temp_evolution.png}
@@ -221,7 +226,7 @@ U_{LJ}(r) & = 4\epsilon\bigg[\bigg(\frac{\sigma}{r}\bigg)^{12} - \bigg(\frac{\si
     \nonumber
 \end{alignat}
 Generally studies of molecular simulation will report the cutoff handling scheme used without much elaboration into why the particular scheme was chosen.
-Perhaps the engine used does not offer many alternatives or perhaps they forcefield used is parameterized with a specific cutoff in mind.
+Perhaps the engine used does not offer many alternatives or perhaps the forcefield used is parameterized with a specific cutoff in mind.
 This is by no means a comprehensive study of all cutoff schemes, but let us define three cases for how the potential beyond the cutoff is handled: hard, shifted, and long-range correction (LRC). 
 In the "hard" cutoff scheme, the potential is simply set to zero beyond $r_{cut}$ with no smoothing regardless of the potential’s value at $r_{cut}$.
 The "shifted" cutoff scheme shifts the entire potential by the potential value at $r_{cut}$ (a constant) such that the potential at $r_{cut}$ is zero.
@@ -298,7 +303,7 @@ Through examination of the energy values of this first frame we also found a dis
     \includegraphics[width=0.6\linewidth,keepaspectratio]{figures/rep_study/lrc_energy.png}
     \caption{Instantaneous energies from first frame of methane by engine comparing "hard" and "LRC" cutoff schemes.}\label{fig:lrc_energy}
 \end{figure}
-This should not have an effect on the end result, but it worth noting for those who may want to compare instantaneous energies:
+This should not have an effect on the end result but is worth noting for those who may want to compare instantaneous energies:
 Newer versions of GROMACS do not include the pressure correction to energy in the total potential energy when running an energy minimization step. 
 This is documented in \href{https://gitlab.com/gromacs/gromacs/-/issues/4229}{GROMACS Issue 4229}.
 
@@ -307,8 +312,8 @@ Although it may seem of little significance, the choice of where the cutoff is s
 \subsection{Rigid constraints}
 
 Benzene and water are modelled as rigid bodies in this study.
-In HOOMD, rigid bodies consist of a central body particle and and its constituent particles. 
-All of these particles can have forces acting upon them, but the mass and moment of the body particle is set to be the full mass and moment of inertia of the body plus its constituents.  
+In HOOMD, rigid bodies consist of a central body particle and its constituent particles. 
+All of these particles can have forces acting upon them, but the mass and moment of inertia of the body particle is set to be the full mass and moment of inertia of the body plus its constituents.  
 Further description of how the rigid constraint forces are implemented can be found in \citet{Nguyen2011a} and \citet{Glaser2020a}, and I contributed to updating the rigid body constraint to the v3 api.
 HOOMD provides functions to simplify the initialization of rigid bodies; however, using these rigid body functions with MoSDeF tools introduced additional hurdles. 
 The difficulties which arise at the intersection between codebases are those with which many simulators will be familiar.
@@ -375,7 +380,7 @@ The differences between the potential energy of the flexible and constrained bon
     \caption{Average potential energy of pentane by engine. The average is taken from independent samples of the equilibrated regions of 16 replicates. The error bars represent two standard deviations in each direction.}\label{fig:pentane_pe}
 \end{figure}
 The potential energies for the constrained bond pentane are much lower because the bond lengths for all systems are fixed at their equilibrium length, which is the minima of the harmonic bond potential.
-In the flexible bond model, the bond is allowed to deviate from its equilibrium length, resulting in higher contribution to potential energy from the bond. 
+In the flexible bond model, the bond is allowed to deviate from its equilibrium length, resulting in higher positive contribution to potential energy from the bond. 
 This difference will be seen in the potential energies for other systems. 
 When the bond lengths are fixed (as in the water and benzene models), the potential energy values observed by MD are closer to those observed by MC. 
 (A direct comparison of flexible vs fixed bonds is shown in \autoref{fig:pentane_pe}, but \autoref{fig:water_pe} and \autoref{fig:benzene_pe} also are rigid models or have fixed bonds.)

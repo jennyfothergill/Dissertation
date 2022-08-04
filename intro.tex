@@ -4,7 +4,7 @@ Molecular simulations give us the  ability to predict the structures of molecule
 Predicting structure is invaluable to engineers because atomic structure determines the mechanical, electrical, chemical, and optical properties of a molecule or material, and therefore how it may be applied to applications in energy generation, sensing, quantum computing, or medicine. 
 Realizing the potential of molecular simulations to inform and transform materials science and engineering is held back by theoretical and practical limitations to the library of simulation techniques.
 %Depending on which simulation technique is applied, different length scales and properties are accessible.
-At the smallest length scales, using density functional theory (DFT), it is possible to obtain the optimized ground state structure and predict induced shifts in the electron density in the form of charges.
+At the smallest length scales, using density functional theory (DFT), it is possible to obtain optimized ground state structures of collections of atoms and predict induced shifts in the electron density in the form of charges.
 The poor computational scaling of DFT, however, places theoretical limits on the number of atoms whose structure can be predicted with today's common computer architectures.
 Molecular dynamics (MD) simulations that sample equilibrium structures of thermodynamic ensembles expand the length scales and time scales that are accessible to molecular simulations, with the trade-off of simplifying assumptions about how atoms interact.
 The $O(N^2)$ scaling of force calculations in MD simulations is better than the $O(N_e^3)$ scaling of some DFT techniques (doubling the number of atoms $N$ makes the computational effort of advancing one ``step'' 4x harder in MD, versus a factor 8x harder when doubling the number of electrons $N_e$ in DFT), but this polynomial scaling still places practical limits of a few million simulation elements (atoms, or bodies representing multiple atoms) using modern supercomputers. 
@@ -52,7 +52,7 @@ Many engines may provide their own tutorials \cite{hoomd_tutorials, Lemkul2019, 
 Collating some relevant tutorials within a lab (and perhaps creating some additional training materials) can help to standardize the training process and make sure that new researchers are not missing material \cite{notebooktutorials}.
 There are many short workshops and references to help newcomers get started, such as Software Carpentry \cite{Wilson2014}.
 Software Carpentry is an open-source, community-driven organization which hosts a collection of lessons and conducts in-person and remote workshops to teach basic lab skills for research computing \cite{swc-main}.
-Using tools like git can help computational scientists keep track how each result was produced, like a lab notebook \cite{Sandve2013}.
+Using tools like git can help computational scientists keep track of how each result was produced, like a lab notebook \cite{Sandve2013}.
 Automation, or using scripts to avoid any manual data manipulation, will help reduce error and boost efficiency and these scripts should be hosted in open version-controlled repositories \cite{Sandve2013}.
 For example, if a public version controlled repository is set up from the beginning, when it comes time to publish, no additional work is required to present the code.
 Although participation in software-specific training may add to a scientist's upfront workload, the long-term efficiency gain results in saving time.
@@ -61,18 +61,18 @@ This training can also help scientists use available tools to increase their pro
 Version control software, like git, is a great benefit for tracking changes to a code repository, and many repository hosting services, like GitHub or GitLab, also provide issue tracking and project boards which can be used to manage and organize collaboration and development \cite{Gentzkow2014}.
 To help users understand the purpose behind a code and how it should be run, there are many tools for creating and hosting documentation such as \texttt{ReadtheDocs} and \texttt{sphinx}.
 Providing examples and tutorials can help make the code more usable.
-\texttt{Jupyter} notebooks, which contain cells of formatted text and images with runnable code, can be a great way for scientists to show and tell the story of their work \cite{Rule2019a}.
+\texttt{Jupyter} notebooks, which contain cells of formatted text and images alongside runnable code, can be a great way for scientists to show and tell the story of their work \cite{Rule2019a}.
 In addition to documentation to help users get the code running, developers can package their code to help users more easily build the software stack necessary to run it.
-Providing the exact names and versions of software aids reproducibility; however, providing containers or virtual machines which contain the exact software stack is even better. This saves users the hassle of installation and prevents opportunities for version mismatching \cite{Cito2016, Shirts2008a}.
-These tools may add to the cognitive load of a computational scientist, but ultimately they make the code they develop more useable by the community.
+Providing the exact names and versions of software aids reproducibility; however, going a step further to provide containers or virtual machines which contain the exact software stack is even better. This saves users the hassle of installation and prevents opportunities for version mismatching \cite{Cito2016, Shirts2008a}.
+These tools may add to the cognitive load of a computational scientist, but ultimately make the developed code more useable by the community.
 
-By providing adequate training upfront and introduction to commonly used tools, new scientists can feel more prepared to be part of the open source science community.
-Training, inclusivity, and collaboration benefit the software development community and recently open source molecular simulation codes have seen an influx in contributors\cite{Jankowski2019}.
+Providing adequate training upfront and introduction to commonly used tools can help new scientists feel more prepared to be part of the open source science community.
+Training, inclusivity, and collaboration benefit the software development community, which can be demonstrated by the recent influx of contributors to open source molecular simulation codes\cite{Jankowski2019}.
 This increase in eyes on the code helps to find bugs, discover new use cases, and make the code more usable to people from diverse backgrounds, but it all relies on scientists being willing to share their code.
-One reason that scientists may not share their code because they view it as unfinished or messy and don't have time to prepare it for publication or worry about being judged \cite{Irving2016}.
-Some scientists may worry that by sharing their work openly, their discoveries will be scooped, but using version control can not only help scientist to track their work but as it provides a signed and timestamped commit---it can be used to prove priority \cite{Blischak2016}. 
-Participation in the open source software development community helps scientists find communities which share the same struggles and can help provide solutions.
-It has been posed that community, not prestige, matters to open-source developers \cite{Smirnova2022}.
+One reason that scientists may not share their code is because they view their work as unfinished or messy and don't have time to prepare it for publication or worry about being judged \cite{Irving2016}.
+Some scientists may worry that by sharing their work openly, their discoveries will be scooped, but using version control can not only help to track their work---as it provides a signed and timestamped commit---but also these commit signatures can be used to prove priority \cite{Blischak2016}. 
+Participation in the open source software development helps scientists find communities which share the same struggles and can help provide solutions.
+Often this feeling of community, not prestige, is what drives open-source developers to contribute \cite{Smirnova2022}.
 By providing newcomers with public contributing guides, codes of conduct, prompt respectful responses to their questions, and acknowledgement of their contributions \cite{Sholler2019}, we can help to make this community more welcoming and accessible.
 Collaboration and participation in a community is vital to helping make sure that computational science is reproducible. 
 
@@ -81,7 +81,7 @@ By having the complete process---from data collection, to analysis, and even fig
 These principles help make computational research transparent, reproducible, useable by others, and extensible (TRUE) \cite{Thompson2020}.
 TRUE principles don't necessarily guarantee that the results are correct, but instead ensure results are reported in a way that facilitates replication and testing by readers and reviews.
 Reporting work according to the TRUE principles supports correctness by allowing subsequent works to more easy scrutinize the results obtained using the exact code used to obtain them.
-When code is provided, many corrections can be found and addressed which ultimately adds to credibility and promise of molecular simulation \cite{superwater}.
+When code is provided, many corrections can be found and addressed which ultimately adds to the credibility and promise of molecular simulation \cite{superwater}.
 An area where transparency, reproducibility, useability, and extensibility is really brought to the forefront is in my experience developing scientific software with the Molecular Simulation and Design Framework (MoSDeF) team.
 I have contributed to the development of open-source packages including \texttt{mBuild}, \texttt{Foyer}, \texttt{Signac}, \texttt{Fresnel}, and \texttt{HOOMD} \cite{mbuild, foyer, signac, fresnel, hoomd}.
 These contributions have given me ample opportunity to exercise best software development practices such as writing documentation, using version control, developing unit tests, employing continuous integration (CI), using a fork \& pull workflow, etc.
@@ -97,17 +97,17 @@ Broadly, my research has used molecular simulation to determine the morphology o
 Learning the intricacies and struggles and what matters to each simulation and how to disseminate and visualize these results.
 I then have used various analysis methods to validate these simulated morphologies with those observed in experiment. 
 Along the way, I have found my passion in helping to make computational sciences more accessible and reproducible.
-There is so much for a new molecular simulator to learn: When entering the field, these scientists must train on the underlying theories (e.g., statistical mechanics, thermodynamics, quantum mechanics, etc) and the specifics of their materials system (e.g., polymers, organic photovoltaics, etc) all while navigating the computational ecosystem (e.g., git, compilers, paths, the terminal, clusters, python, etc).
+There is so much for a new molecular simulator to learn: When entering the field, these scientists must train on the underlying theories (e.g., statistical mechanics, thermodynamics, quantum mechanics, etc.) and the specifics of their materials system (e.g., polymers, organic photovoltaics, etc.) all while navigating the computational ecosystem (e.g., git, compilers, paths, the terminal, clusters, python, etc.).
 With all this cognitive overhead to consider, it makes sense that scientists cobble together what they can in order to run their experiment; they may not feel they have the time to learn best practices or they may not be aware these best practices even exist!
-My work has focused on developing and using computational tools and workflows to predict and understand self assembly of electronically active molecules with a focus on making these tool usable by others and demonstrating best practices following TRUE principles.
+My work has focused on developing and using computational tools and workflows to predict and understand self assembly of electronically active molecules with a focus on making these tools usable by others and demonstrating best practices following TRUE principles.
 The resulting four journal publications, two in-preparation manuscripts, two posters, and one conference presentation span all scales from first-principles calculation of electronically active dimers to the creation of new tools for analyzing the long-range periodicities of large scale atomistic and coarse-grain (CG) simulations.
 
-In this thesis I describe projects in which I was both the lead code developer as well as projects where I needed to learn existing code to run experiments.
-An additional focus of this thesis is the work that I have done to make the codebases I have contributed to TRUE in the hopes that they will serve others after I leave.
+In this dissertation I describe projects in which I was both the lead code developer as well as projects where I needed to learn existing code to run experiments.
+An additional focus of this dissertation is the work that I have done to make the codebases I have contributed to TRUE in the hopes that they will serve others after I leave.
 
 In my first publication on dimer formation, an investigation of the excitonic splitting observed in cyanine dye dimers was done using density functional theory (DFT) \cite{Fothergill2018}.
 By comparing calculated with experimental absorption spectra it was found that the solvent may play a large role in the dimer formation and peak shifting.
-I performed all simulations under the guidance of Drs. Li and Yurke, created all figures, and wrote all stages of draft this paper with review feedback from Dr Li, Dr Knowlton, and Dr. Yurke.
+I performed all simulations under the guidance of Dr.~Li and Dr.~Yurke, created all figures, and wrote all stages of draft this paper with review feedback from Dr.~Li, Dr.~Knowlton, and Dr.~Yurke.
 
 In my second publication, an investigation of the supramolecular interactions which guide crystal self-assembly in diphenylurea transition metal complexes was done using DFT \cite{Millard2019a}.
 I contributed DFT energies and optimized structures under the guidance of Dr King.
@@ -116,17 +116,17 @@ My third publication was a thorough investigation of the effect of para-substitu
 
 My contribution to the lab's perspective paper was mostly about my on-boarding experience trying to reproduce an existing model; a task which should be very straightforward but, which any computational scientist can attest, is far from simple \cite{Jankowski2019}.
 
-These published works are included in the appendices for readers with interest in these topics. As my current research focuses on developing TRUE workflows, two chapters are presented which highlight my software development efforts.
+These published works are included in the appendices for readers with interest in these topics. The two core chapters here focus on the development of TRUE workflows, highlighting software development efforts.
 
-\autoref{chap:p3ht_validation} will detail validation of an updated workflow to explore the state-space dependence of the ordering of poly-3-hexylthiophene (P3HT) polymer. 
+\Cref{chap:p3ht_validation} details validation of an updated workflow to explore the state-space dependence of the ordering of poly-3-hexylthiophene (P3HT) polymer. 
 This workflow was highlighted in a talk given at the 2021 American Institute of Chemical Engineers conference. 
-And one of the tools used in the workflow, GIXStapose, was also presented in my first poster contribution as Boise State University's 2020 Research Computing days and at the 2020 SciPy conference \cite{gixstapose, scipy2020}. 
-The original work this workflow validated was transparent in that it freely distributed all it's source material, from raw data to all scripts used for processing.
-The original workflow was also reproducible in that the software stack was documented and if necessary it could be recreated and rerun.
-I added improvements to this workflow by making it even easier to install by using and distributing a Docker container with the full software stack, making it more usable by others by creating modular packages with full documentation and tutorials, and more extensible by generalizing the workflow to accept any molecule as input.
+One of the tools used in the workflow, GIXStapose, was also presented in my first poster contribution as Boise State University's 2020 Research Computing days and at the 2020 SciPy conference \cite{gixstapose, scipy2020}. 
+The original workflow being validated was transparent in that it freely distributed all it's source material, from raw data to all scripts used for processing.
+It was also reproducible in that the software stack was documented and if necessary it could be recreated and rerun.
+I added improvements to this workflow by making it easier to install by using and distributing a Docker container with the full software stack, more usable by others by creating modular packages with full documentation and tutorials, and more extensible by generalizing the workflow to accept any molecule as input.
 This chapter demonstrates what a TRUE workflow can look like, and how tools can be designed according to TRUE principles.
 
-\autoref{chap:reproducibility} will summarize my effort in a multi-university collaborative study to use MoSDeF tools reproducibly which is in preparation. 
+\Cref{chap:reproducibility} summarizes my effort in a multi-university collaborative study to use MoSDeF tools reproducibly which is in preparation. 
 This study follows in the footsteps of other studies which compare the result of analogous methods across different engines in hopes of validating method implementation\citep{Shirts2017, Loeffler2018, Schappals2017}. 
 This study demonstrates the hurdles to achieve reproducible results between different people using different engines, and the power of collaboration and community to tackle large problems.
 My contribution to this study include creation of all scripts needed to run MD simulations using HOOMD including implementation of a new method for tail correction and fixing all bugs found along the way. 
